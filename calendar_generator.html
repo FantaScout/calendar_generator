@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lega Amatori Calcio Treviso - Generatore Calendari</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS per esportazione Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 p-6">
+
+    <div class="max-w-7xl mx-auto space-y-6">
+        
+        <!-- HEADER -->
+        <header class="bg-slate-900 text-white p-6 rounded-xl shadow-lg flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold tracking-wide">LEGA AMATORI CALCIO TREVISO</h1>
+                <p class="text-slate-400 text-sm">Pannello di Configurazione Multi-Campionato & Prompt Generator</p>
+            </div>
+            <span class="bg-teal-500 text-slate-900 text-xs font-black uppercase px-3 py-1 rounded-full">Gestione Avanzata</span>
+        </header>
+
+        <!-- SEZIONE 1: Gestione Campionati/Gironi -->
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">1. Campionati e Gironi</h2>
+                    <p class="text-xs text-slate-500">Crea tutti i campionati o gironi gestiti durante la stagione.</p>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" id="newLeagueInput" placeholder="Nome Campionato (es. Eccellenza, Over 35, Coppa)" class="border border-slate-300 rounded p-1.5 text-xs outline-none w-64">
+                    <button onclick="addLeague()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded transition">+ Aggiungi</button>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2" id="leaguesContainer">
+                <!-- Badges dei campionati inseriti -->
+            </div>
+        </section>
+
+        <!-- SEZIONE 2: Anagrafica Squadre e Campi -->
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">2. Anagrafica Squadre, Campi e Iscrizioni</h2>
+                    <p class="text-xs text-slate-500">Assegna ogni squadra a uno o più campionati e definisci le abbreviazioni per il campo.</p>
+                </div>
+                <button onclick="addTeamRow()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-2 rounded transition">+ Aggiungi Squadra</button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm" id="teamsTable">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-600 border-b border-slate-200 text-xs uppercase">
+                            <th class="p-2">Nome Squadra</th>
+                            <th class="p-2">Campionati a cui partecipa</th>
+                            <th class="p-2">Campo di Casa</th>
+                            <th class="p-2">Località</th>
+                            <th class="p-2 w-20">Sigla (es. GZ)</th>
+                            <th class="p-2">Giorno Casa</th>
+                            <th class="p-2 w-20">Orario</th>
+                            <th class="p-2 text-center">Azione</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teamsBody">
+                        <!-- Righe generate da JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SEZIONE 3: Regole & Paletti -->
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">3. Regole Speciali e Vincoli</h2>
+                    <p class="text-xs text-slate-500">Inserisci regole specifiche (es. sovrapposizioni tra campionati o limitazioni sui giorni).</p>
+                </div>
+                <button onclick="addRuleRow()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-2 rounded transition">+ Aggiungi Regola</button>
+            </div>
+
+            <div class="space-y-3" id="rulesContainer">
+                <!-- Regole dinamiche inserite via JS -->
+            </div>
+        </section>
+
+        <!-- SEZIONE 4: Output e Generazione -->
+        <section class="bg-slate-900 text-white p-6 rounded-xl shadow-lg space-y-4">
+            <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold">Pronto per la generazione?</h2>
+                    <p class="text-slate-400 text-xs">Esporta la struttura Excel completa o copia il prompt dettagliato per Claude.</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm px-4 py-2.5 rounded transition shadow flex items-center gap-2">
+                        📄 Scarica Excel
+                    </button>
+                    <button onclick="generatePrompt()" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-sm px-4 py-2.5 rounded transition shadow flex items-center gap-2">
+                        🤖 Genera Prompt Claude
+                    </button>
+                </div>
+            </div>
+
+            <!-- Area Prompt -->
+            <div id="promptOutputContainer" class="hidden mt-4 space-y-2">
+                <div class="flex justify-between items-center">
+                    <label class="text-xs font-bold text-teal-400 uppercase tracking-wider">Prompt da incollare su Claude:</label>
+                    <button onclick="copyPrompt()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1 rounded border border-slate-700">Copia Testo</button>
+                </div>
+                <textarea id="promptOutput" rows="12" readonly class="w-full bg-slate-950 text-slate-300 font-mono text-xs p-4 rounded-lg border border-slate-800 outline-none leading-relaxed"></textarea>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- SCRIPT LOGICO -->
+    <script>
+        // Elenco iniziale dei campionati
+        let leagues = ["Serie A1", "Serie B", "Coppa Treviso"];
+
+        // Dati iniziali di esempio
+        const initialTeams = [
+            { name: "AC Treviso", leagues: ["Serie A1", "Coppa Treviso"], venue: "Stadio Tenni", location: "Treviso", code: "TV", day: "Lunedì", time: "20:45" },
+            { name: "FC Gazzera", leagues: ["Serie A1"], venue: "Campo Comunale", location: "Gazzera", code: "GZ", day: "Mercoledì", time: "21:00" },
+            { name: "ASD Paese", leagues: ["Serie B", "Coppa Treviso"], venue: "Impianto Paese", location: "Paese", code: "PS", day: "Giovedì", time: "20:30" }
+        ];
+
+        const initialRules = [
+            { team: "AC Treviso", text: "Partecipa a Serie A1 e Coppa Treviso: evitare tassativamente di farla giocare in due campionati diversi nello stesso giorno." },
+            { team: "GENERALE", text: "Nei tabelloni e nei calendari sintetici riportare sempre la SIGLA della località anziché il nome per esteso (es. utilizzare 'GZ' per Gazzera)." }
+        ];
+
+        window.onload = function() {
+            renderLeagues();
+            initialTeams.forEach(t => addTeamRow(t.name, t.leagues, t.venue, t.location, t.code, t.day, t.time));
+            initialRules.forEach(r => addRuleRow(r.team, r.text));
+        };
+
+        function renderLeagues() {
+            const container = document.getElementById('leaguesContainer');
+            container.innerHTML = '';
+            leagues.forEach((league, index) => {
+                const badge = document.createElement('div');
+                badge.className = "flex items-center gap-1.5 bg-slate-100 border border-slate-300 text-slate-800 text-xs font-semibold px-3 py-1 rounded-full";
+                badge.innerHTML = `
+                    <span>${league}</span>
+                    <button onclick="removeLeague(${index})" class="text-slate-400 hover:text-red-500 font-bold ml-1">&times;</button>
+                `;
+                container.appendChild(badge);
+            });
+            updateAllTeamLeaguesCheckboxes();
+        }
+
+        function addLeague() {
+            const input = document.getElementById('newLeagueInput');
+            const val = input.value.trim();
+            if(val && !leagues.includes(val)) {
+                leagues.push(val);
+                input.value = '';
+                renderLeagues();
+            }
+        }
+
+        function removeLeague(index) {
+            leagues.splice(index, 1);
+            renderLeagues();
+        }
+
+        function addTeamRow(name="", selectedLeagues=[], venue="", location="", code="", day="Lunedì", time="20:45") {
+            const tbody = document.getElementById('teamsBody');
+            const row = document.createElement('tr');
+            row.className = "border-b border-slate-100 hover:bg-slate-50";
+
+            row.innerHTML = `
+                <td class="p-2"><input type="text" value="${name}" placeholder="Nome Squadra" class="team-name w-full border border-slate-200 rounded p-1.5 text-xs outline-none" oninput="updateRuleDropdowns()"></td>
+                <td class="p-2"><div class="team-leagues-container flex flex-wrap gap-2"></div></td>
+                <td class="p-2"><input type="text" value="${venue}" placeholder="Nome Impianto" class="team-venue w-full border border-slate-200 rounded p-1.5 text-xs outline-none"></td>
+                <td class="p-2"><input type="text" value="${location}" placeholder="es. Gazzera" class="team-location w-full border border-slate-200 rounded p-1.5 text-xs outline-none"></td>
+                <td class="p-2"><input type="text" value="${code}" placeholder="GZ" class="team-code w-16 border border-slate-200 rounded p-1.5 text-xs outline-none font-bold text-center uppercase"></td>
+                <td class="p-2">
+                    <select class="team-day w-full border border-slate-200 rounded p-1.5 text-xs outline-none">
+                        ${['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'].map(d => `<option value="${d}" ${d===day?'selected':''}>${d}</option>`).join('')}
+                    </select>
+                </td>
+                <td class="p-2"><input type="text" value="${time}" placeholder="20:45" class="team-time w-16 border border-slate-200 rounded p-1.5 text-xs outline-none"></td>
+                <td class="p-2 text-center">
+                    <button onclick="this.closest('tr').remove(); updateRuleDropdowns();" class="text-red-500 hover:text-red-700 font-bold text-base px-2">&times;</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+            renderTeamLeagueCheckboxes(row, selectedLeagues);
+            updateRuleDropdowns();
+        }
+
+        function renderTeamLeagueCheckboxes(row, selectedLeagues=[]) {
+            const container = row.querySelector('.team-leagues-container');
+            container.innerHTML = '';
+            if(leagues.length === 0) {
+                container.innerHTML = `<span class="text-xs text-red-400 italic">Nessun campionato creato</span>`;
+                return;
+            }
+            leagues.forEach(l => {
+                const checked = selectedLeagues.includes(l) ? 'checked' : '';
+                const label = document.createElement('label');
+                label.className = "inline-flex items-center gap-1 text-xs cursor-pointer bg-slate-100 px-2 py-0.5 rounded border border-slate-200";
+                label.innerHTML = `<input type="checkbox" value="${l}" ${checked} class="league-checkbox text-slate-900 rounded focus:ring-0"> ${l}`;
+                container.appendChild(label);
+            });
+        }
+
+        function updateAllTeamLeaguesCheckboxes() {
+            document.querySelectorAll('#teamsBody tr').forEach(row => {
+                const checkedLeagues = Array.from(row.querySelectorAll('.league-checkbox:checked')).map(cb => cb.value);
+                renderTeamLeagueCheckboxes(row, checkedLeagues);
+            });
+        }
+
+        function addRuleRow(selectedTeam="", ruleText="") {
+            const container = document.getElementById('rulesContainer');
+            const div = document.createElement('div');
+            div.className = "rule-item flex flex-col md:flex-row gap-2 items-start md:items-center bg-slate-50 p-3 rounded border border-slate-200";
+
+            const teams = getTeamNames();
+            let optionsHtml = `<option value="GENERALE">-- Regola Generale / Tutta la Lega --</option>`;
+            teams.forEach(t => {
+                optionsHtml += `<option value="${t}" ${t===selectedTeam?'selected':''}>${t}</option>`;
+            });
+
+            div.innerHTML = `
+                <div class="w-full md:w-1/3">
+                    <select class="rule-team w-full border border-slate-300 rounded p-2 text-xs font-semibold bg-white outline-none">
+                        ${optionsHtml}
+                    </select>
+                </div>
+                <div class="w-full md:w-2/3 flex gap-2">
+                    <input type="text" value="${ruleText}" placeholder="Descrivi il vincolo (es. Non può giocare lo stesso giorno in due campionati)" class="rule-text w-full border border-slate-300 rounded p-2 text-xs outline-none bg-white">
+                    <button onclick="this.closest('.rule-item').remove()" class="text-red-500 hover:text-red-700 font-bold text-base px-2">&times;</button>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function getTeamNames() {
+            const names = [];
+            document.querySelectorAll('.team-name').forEach(input => {
+                if(input.value.trim() !== "") names.push(input.value.trim());
+            });
+            return names;
+        }
+
+        function updateRuleDropdowns() {
+            const teams = getTeamNames();
+            document.querySelectorAll('.rule-team').forEach(select => {
+                const currentVal = select.value;
+                let optionsHtml = `<option value="GENERALE">-- Regola Generale / Tutta la Lega --</option>`;
+                teams.forEach(t => {
+                    optionsHtml += `<option value="${t}" ${t===currentVal?'selected':''}>${t}</option>`;
+                });
+                select.innerHTML = optionsHtml;
+            });
+        }
+
+        function getFormData() {
+            const teams = [];
+            document.querySelectorAll('#teamsBody tr').forEach(row => {
+                const selectedLeagues = Array.from(row.querySelectorAll('.league-checkbox:checked')).map(cb => cb.value);
+                teams.push({
+                    name: row.querySelector('.team-name').value.trim(),
+                    leagues: selectedLeagues,
+                    venue: row.querySelector('.team-venue').value.trim(),
+                    location: row.querySelector('.team-location').value.trim(),
+                    code: row.querySelector('.team-code').value.trim().toUpperCase(),
+                    day: row.querySelector('.team-day').value,
+                    time: row.querySelector('.team-time').value.trim()
+                });
+            });
+
+            const rules = [];
+            document.querySelectorAll('.rule-item').forEach(row => {
+                const team = row.querySelector('.rule-team').value;
+                const text = row.querySelector('.rule-text').value.trim();
+                if(text) rules.push({ team, text });
+            });
+
+            return { leagues, teams, rules };
+        }
+
+        function exportToExcel() {
+            const data = getFormData();
+            const wb = XLSX.utils.book_new();
+
+            // Sheet 1: Squadre
+            const wsTeamsData = [["Nome Squadra", "Campionati", "Campo di Casa", "Località", "Sigla Località", "Giorno Casa", "Orario"]];
+            data.teams.forEach(t => wsTeamsData.push([t.name, t.leagues.join(", "), t.venue, t.location, t.code, t.day, t.time]));
+            const wsTeams = XLSX.utils.aoa_to_sheet(wsTeamsData);
+            XLSX.utils.book_append_sheet(wb, wsTeams, "Anagrafica Squadre");
+
+            // Sheet 2: Regole
+            const wsRulesData = [["Riferimento", "Regola / Vincolo"]];
+            data.rules.forEach(r => wsRulesData.push([r.team, r.text]));
+            const wsRules = XLSX.utils.aoa_to_sheet(wsRulesData);
+            XLSX.utils.book_append_sheet(wb, wsRules, "Regole e Vincoli");
+
+            XLSX.writeFile(wb, "Lega_Amatori_Calcio_Treviso_Dati.xlsx");
+        }
+
+        function generatePrompt() {
+            const data = getFormData();
+
+            let prompt = `Sei un esperto responsabile della programmazione dei calendari della LEGA AMATORI CALCIO TREVISO.\n`;
+            prompt += `Ti allego l'Excel con l'anagrafica completa di squadre, campi e iscrizioni.\n\n`;
+
+            prompt += `--- CAMPIONATI GESTITI ---\n`;
+            prompt += `${data.leagues.join(", ")}\n\n`;
+
+            prompt += `--- ANAGRAFICA SQUADRE E ISCRIZIONI ---\n`;
+            data.teams.forEach(t => {
+                prompt += `- ${t.name}\n`;
+                prompt += `  • Campionati: ${t.leagues.length ? t.leagues.join(", ") : "Nessuno"}\n`;
+                prompt += `  • Campo Casa: ${t.venue} - ${t.location} (SIGLA REGISTRATA: '${t.code}')\n`;
+                prompt += `  • Giorno e Ora Casa: ${t.day} ore ${t.time}\n`;
+            });
+
+            prompt += `\n--- REGOLE CRITICHE E VINCOLI DI PROGRAMMAZIONE ---\n`;
+            prompt += `1. FORMATO LOCALITÀ: Nei calendari ufficiali e nelle tabelle delle partite, inserisci SEMPRE la SIGLA DELLA LOCALITÀ (es. '${data.teams[0]?.code || "GZ"}') invece del nome completo per esteso.\n`;
+            prompt += `2. CONCOMITANZE MULTI-CAMPIONATO: Se una squadra partecipa a più campionati diversi, assicurati che NON sia mai programmata per giocare due partite nello stesso giorno solare.\n`;
+            
+            if(data.rules.length > 0) {
+                prompt += `\n--- ALTRI PALETTI E REGOLE SPECIFICHE ---\n`;
+                data.rules.forEach(r => {
+                    prompt += `- [${r.team}] -> ${r.text}\n`;
+                });
+            }
+
+            prompt += `\n--- RICHIESTA OUTPUT ---\n`;
+            prompt += `Genera i calendari completi divisi per ciascun Campionato e per ciascuna Giornata. Assicurati che le sigle località siano posizionate correttamente affianco all'orario o al campo. Formatta in modo chiaro pronto per la pubblicazione PDF.`;
+
+            document.getElementById('promptOutput').value = prompt;
+            document.getElementById('promptOutputContainer').classList.remove('hidden');
+        }
+
+        function copyPrompt() {
+            const copyText = document.getElementById("promptOutput");
+            copyText.select();
+            document.execCommand("copy");
+            alert("Prompt copiato negli appunti!");
+        }
+    </script>
+</body>
+</html>
