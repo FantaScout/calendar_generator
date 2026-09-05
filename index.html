@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lega Amatori Calcio Treviso - Gestione Calendari</title>
+    <title>Lega Amatori Calcio Treviso - Gestione Calendari Advanced</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS per lettura ed esportazione Excel -->
@@ -17,13 +17,13 @@
         <header class="bg-slate-900 text-white p-6 rounded-xl shadow-lg flex flex-col md:flex-row gap-4 justify-between items-center">
             <div>
                 <h1 class="text-2xl font-bold tracking-wide">LEGA AMATORI CALCIO TREVISO</h1>
-                <p class="text-slate-400 text-sm">Pannello di Controllo Calendari & Importazione Excel Lega</p>
+                <p class="text-slate-400 text-sm">Gestione Calendari, Regole Puntuali & Ottimizzazione Chilometrica</p>
             </div>
             
             <!-- PULSANTI IMPORT/EXPORT -->
             <div class="flex flex-wrap gap-2">
                 <label class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded transition cursor-pointer flex items-center gap-1.5 shadow">
-                    📊 Importa Excel Lega
+                    📊 Importa Excel Lega + Regole
                     <input type="file" id="importExcelLega" accept=".xlsx, .xls" class="hidden" onchange="importLegaExcel(event)">
                 </label>
                 <button onclick="exportBackup()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold px-3 py-2 rounded transition flex items-center gap-1.5">
@@ -36,12 +36,12 @@
             </div>
         </header>
 
-        <!-- SEZIONE 1: Gestione Campionati & Gironi -->
+        <!-- SEZIONE 1: Gestione Campionati & Modalità -->
         <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 border-b pb-2">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-900">1. Campionati e Gironi</h2>
-                    <p class="text-xs text-slate-500">I campionati vengono creati automaticamente importando l'Excel o aggiungendoli manualmente.</p>
+                    <h2 class="text-lg font-bold text-slate-900">1. Campionati e Modalità di Svolgimento</h2>
+                    <p class="text-xs text-slate-500">Definisci se ciascun campionato è ad <strong>Andata/Ritorno</strong> o <strong>Solo Andata</strong>. Tutte le scelte devono essere validate per abilitare la generazione.</p>
                 </div>
                 <div class="flex gap-2 w-full md:w-auto">
                     <input type="text" id="newLeagueInput" placeholder="Nuovo Campionato (es. 40A1)" class="border border-slate-300 rounded p-1.5 text-xs outline-none w-full md:w-64">
@@ -49,25 +49,19 @@
                 </div>
             </div>
 
-            <div class="flex flex-wrap gap-2" id="leaguesContainer">
-                <!-- Badges campionati -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" id="leaguesConfigContainer">
+                <!-- Vuoto di default -->
             </div>
         </section>
 
-        <!-- SEZIONE 2: Configurazione Date Giornate per Campionato -->
+        <!-- SEZIONE 2: Configurazione Date Giornate per Campionato (TABELLA MATRICE) -->
         <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-2">
                 <div>
                     <h2 class="text-lg font-bold text-slate-900">2. Configurazione Date Giornate ("Dal" - "Al")</h2>
-                    <p class="text-xs text-slate-500">Seleziona il campionato per impostare o visualizzare il periodo di svolgimento di ciascuna giornata.</p>
+                    <p class="text-xs text-slate-500">Periodi di svolgimento delle giornate e associazione con spunta ai relativi campionati.</p>
                 </div>
-                <div class="flex items-center gap-2">
-                    <label class="text-xs font-bold text-slate-700">Seleziona Campionato:</label>
-                    <select id="leagueDateSelector" onchange="renderScheduleDatesTable()" class="border border-slate-300 rounded p-1.5 text-xs outline-none font-bold bg-slate-50">
-                        <!-- Popolato via JS -->
-                    </select>
-                    <button onclick="addScheduleDateRow()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded transition">+ Aggiungi Giornata</button>
-                </div>
+                <button onclick="addScheduleDateRow()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded transition">+ Aggiungi Giornata</button>
             </div>
 
             <div class="overflow-x-auto">
@@ -75,24 +69,25 @@
                     <thead>
                         <tr class="bg-slate-50 text-slate-600 border-b border-slate-200 text-xs uppercase">
                             <th class="p-2 w-28">N° Giornata</th>
-                            <th class="p-2">Dal (Inizio Giornata)</th>
-                            <th class="p-2">Al (Fine Giornata)</th>
+                            <th class="p-2 w-36">Dal (Inizio)</th>
+                            <th class="p-2 w-36">Al (Fine)</th>
+                            <th class="p-2 text-center">A quale campionato è agganciatа</th>
                             <th class="p-2 text-center w-20">Azione</th>
                         </tr>
                     </thead>
                     <tbody id="scheduleDatesBody">
-                        <!-- Righe generate via JS -->
+                        <!-- Vuoto di default -->
                     </tbody>
                 </table>
             </div>
         </section>
 
-        <!-- SEZIONE 3: Anagrafica Squadre e Campi -->
+        <!-- SEZIONE 3: Anagrafica Squadre, Campi e Località -->
         <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-900">3. Anagrafica Squadre, Campi e Iscrizioni</h2>
-                    <p class="text-xs text-slate-500">Elenco delle squadre e relativi campi con la sigla della località.</p>
+                    <h2 class="text-lg font-bold text-slate-900">3. Anagrafica Squadre, Località e Campi</h2>
+                    <p class="text-xs text-slate-500">Elenco delle squadre con indicazione della località per il calcolo delle distanze.</p>
                 </div>
                 <button onclick="addTeamRow()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-2 rounded transition">+ Aggiungi Squadra</button>
             </div>
@@ -102,6 +97,7 @@
                     <thead>
                         <tr class="bg-slate-50 text-slate-600 border-b border-slate-200 text-xs uppercase">
                             <th class="p-2">Nome Squadra</th>
+                            <th class="p-2">Località / Comune</th>
                             <th class="p-2">Campionati Iscritti</th>
                             <th class="p-2 w-24">Sigla Campo</th>
                             <th class="p-2">Giorno Casa</th>
@@ -110,24 +106,24 @@
                         </tr>
                     </thead>
                     <tbody id="teamsBody">
-                        <!-- Righe generate via JS -->
+                        <!-- Vuoto di default -->
                     </tbody>
                 </table>
             </div>
         </section>
 
-        <!-- SEZIONE 4: Regole e Paletti -->
+        <!-- SEZIONE 4: Regole Importate e Personalizzate -->
         <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-900">4. Regole Speciali e Vincoli</h2>
-                    <p class="text-xs text-slate-500">Paletti aggiuntivi per le sovrapposizioni o eccezioni.</p>
+                    <h2 class="text-lg font-bold text-slate-900">4. Regole Speciali e Vincoli Puntuali</h2>
+                    <p class="text-xs text-slate-500">Logiche d'esclusione/inclusione relative a Campionato, Campo, Data o Squadra.</p>
                 </div>
                 <button onclick="addRuleRow()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-2 rounded transition">+ Aggiungi Regola</button>
             </div>
 
             <div class="space-y-3" id="rulesContainer">
-                <!-- Regole dinamiche -->
+                <!-- Vuoto di default -->
             </div>
         </section>
 
@@ -135,11 +131,11 @@
         <section class="bg-slate-900 text-white p-6 rounded-xl shadow-lg space-y-6">
             <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
                 <div>
-                    <h2 class="text-xl font-bold">Generazione Output</h2>
-                    <p class="text-slate-400 text-xs">Crea il calendario in formato HTML/Excel oppure genera il prompt per Claude.</p>
+                    <h2 class="text-xl font-bold">Generazione Output & Report</h2>
+                    <p class="text-slate-400 text-xs" id="statusMessage">Carica un file Excel o aggiungi campionati per iniziare.</p>
                 </div>
                 <div class="flex flex-wrap gap-3">
-                    <button onclick="generateAutomaticSchedule()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm px-4 py-2.5 rounded transition shadow flex items-center gap-2">
+                    <button id="btnGenerateHTML" onclick="generateAutomaticSchedule()" disabled class="bg-indigo-600 disabled:bg-slate-700 disabled:opacity-50 hover:bg-indigo-500 text-white font-bold text-sm px-4 py-2.5 rounded transition shadow flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed">
                         ⚽ Genera Calendario HTML
                     </button>
                     <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm px-4 py-2.5 rounded transition shadow flex items-center gap-2">
@@ -154,7 +150,7 @@
             <!-- OUTPUT CALENDARIO -->
             <div id="scheduleOutputContainer" class="hidden bg-slate-950 p-6 rounded-lg border border-slate-800 space-y-6">
                 <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                    <h3 class="text-lg font-bold text-teal-400">Calendari Generati con Date Esatte</h3>
+                    <h3 class="text-lg font-bold text-teal-400">Calendari Generati e Monitoraggio Percorrenze</h3>
                     <button onclick="exportScheduleExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded">Esporta Calendari in Excel</button>
                 </div>
                 <div id="scheduleOutput" class="space-y-8"></div>
@@ -173,18 +169,52 @@
     </div>
 
     <script>
-        let leagues = ["A", "B1", "40A1", "40A2", "40B1", "40B2", "50"];
-        let leagueDates = {};
+        // Stato Iniziale VUOTO
+        let leaguesMode = {};
+        let leagues = [];
+        let globalRoundsList = []; // Lista unificata delle giornate con i campionati associati
         let teams = [];
         let rules = [];
         let lastGeneratedSchedule = {};
 
-        window.onload = function() {
-            renderLeagues();
-            renderDateSelector();
+        // Mappa Dati Distanze Indicative (in km)
+        const defaultKmMap = {
+            "TREVISO": { "TREVISO": 0, "MOGLIANO": 12, "PAESE": 8, "VILLORBA": 7, "CONEGLIANO": 30, "CASTELFRANCO": 28, "MONTEBELLUNA": 22 },
+            "MOGLIANO": { "TREVISO": 12, "MOGLIANO": 0, "PAESE": 18, "VILLORBA": 19, "CONEGLIANO": 42, "CASTELFRANCO": 35, "MONTEBELLUNA": 34 },
+            "PAESE": { "TREVISO": 8, "MOGLIANO": 18, "PAESE": 0, "VILLORBA": 11, "CONEGLIANO": 32, "CASTELFRANCO": 20, "MONTEBELLUNA": 18 },
+            "VILLORBA": { "TREVISO": 7, "MOGLIANO": 19, "PAESE": 11, "VILLORBA": 0, "CONEGLIANO": 23, "CASTELFRANCO": 30, "MONTEBELLUNA": 20 },
+            "CASTELFRANCO": { "TREVISO": 28, "MOGLIANO": 35, "PAESE": 20, "VILLORBA": 30, "CONEGLIANO": 50, "CASTELFRANCO": 0, "MONTEBELLUNA": 15 }
         };
 
-        // --- IMPORTAZIONE AUTOMATICA DA EXCEL LEGA ---
+        window.onload = function() {
+            renderLeaguesConfig();
+            renderScheduleDatesTable();
+            validateGenerationState();
+        };
+
+        // --- VALIDAZIONE STATO ---
+        function validateGenerationState() {
+            const btn = document.getElementById('btnGenerateHTML');
+            const msg = document.getElementById('statusMessage');
+            
+            let allSet = leagues.length > 0 && leagues.every(l => leaguesMode[l] === 'ANDATA_RITORNO' || leaguesMode[l] === 'SOLO_ANDATA');
+            
+            if(leagues.length === 0) {
+                btn.disabled = true;
+                msg.textContent = "Nessun campionato presente. Importa il file Excel per iniziare.";
+                msg.className = "text-slate-400 text-xs font-semibold";
+            } else if(allSet) {
+                btn.disabled = false;
+                msg.textContent = "Tutte le modalità sono impostate. Puoi generare i calendari.";
+                msg.className = "text-emerald-400 text-xs font-semibold";
+            } else {
+                btn.disabled = true;
+                msg.textContent = "Seleziona la modalità (Andata/Ritorno o Solo Andata) per ciascun campionato.";
+                msg.className = "text-amber-400 text-xs font-semibold";
+            }
+        }
+
+        // --- IMPORTAZIONE AUTOMATICA DA EXCEL UNIFICATO & REGOLE ---
         function importLegaExcel(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -195,54 +225,76 @@
                 const workbook = XLSX.read(data, { type: 'array', cellDates: true });
 
                 teams = [];
-                leagueDates = {};
+                rules = [];
+                globalRoundsList = [];
                 const foundLeagues = new Set();
+                const tempRoundsMap = {}; // Key: "round_dal_al" -> Set of leagues
 
                 workbook.SheetNames.forEach(sheetName => {
                     const sheet = workbook.Sheets[sheetName];
                     const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-                    let readingDatesSection = false;
+                    let currentMode = "SQUADRE";
 
-                    rows.forEach(row => {
-                        if (!row || row.length < 4) return;
+                    rows.forEach((row, idx) => {
+                        if (!row || row.length === 0) return;
 
-                        const col0 = String(row[0] || '').trim();
-                        const col1 = String(row[1] || '').trim();
-                        const col2 = String(row[2] || '').trim();
-                        const col3 = String(row[3] || '').trim();
+                        const firstCol = String(row[0] || '').trim().toUpperCase();
 
-                        if (col0 === 'CAMPIONATO' && col1.includes('# GIORNATA')) {
-                            readingDatesSection = true;
+                        // Sezione Regole
+                        if (firstCol === 'REGOLE' || (String(row[4] || '').toUpperCase().includes('TIPO REGOLA'))) {
+                            currentMode = "REGOLE";
                             return;
                         }
 
-                        if (col0 === 'CAMPIONATO' && col1 === 'CAMPO') {
-                            readingDatesSection = false;
+                        if (currentMode === "REGOLE") {
+                            if (firstCol === 'CAMPIONATO' || firstCol === 'REGOLE') return;
+                            
+                            const league = String(row[0] || '').trim();
+                            const field = String(row[1] || '').trim();
+                            const date = formatDate(row[2]);
+                            const team = String(row[3] || '').trim();
+                            const ruleType = String(row[4] || '').toUpperCase().trim();
+                            const matchTarget = String(row[5] || '').trim();
+
+                            if (ruleType) {
+                                rules.push({ league, field, date, team, ruleType, matchTarget });
+                                if (league) foundLeagues.add(league);
+                            }
                             return;
                         }
 
-                        if (readingDatesSection || col1.toUpperCase().includes('GIORNATA')) {
-                            const leagueName = col0;
-                            const roundMatch = col1.match(/\d+/);
+                        // Sezione Date / Giornate
+                        if (firstCol === 'CAMPIONATO' && String(row[1] || '').includes('# GIORNATA')) {
+                            currentMode = "DATES";
+                            return;
+                        }
+
+                        if (currentMode === "DATES" || String(row[1] || '').toUpperCase().includes('GIORNATA')) {
+                            const leagueName = String(row[0] || '').trim();
+                            const roundMatch = String(row[1] || '').match(/\d+/);
                             const roundNum = roundMatch ? parseInt(roundMatch[0], 10) : null;
                             const dal = formatDate(row[2]);
                             const al = formatDate(row[3]);
 
                             if (leagueName && roundNum) {
                                 foundLeagues.add(leagueName);
-                                if (!leagueDates[leagueName]) leagueDates[leagueName] = [];
-                                
-                                if (!leagueDates[leagueName].some(d => d.round === roundNum)) {
-                                    leagueDates[leagueName].push({ round: roundNum, dal: dal, al: al });
+                                const key = `${roundNum}_${dal}_${al}`;
+                                if (!tempRoundsMap[key]) {
+                                    tempRoundsMap[key] = { round: roundNum, dal: dal, al: al, leagues: new Set() };
                                 }
+                                tempRoundsMap[key].leagues.add(leagueName);
                             }
-                        } 
-                        else if (isDayOfWeek(col2)) {
-                            const leagueName = col0;
-                            const code = col1.toUpperCase();
+                        }
+
+                        // Sezione Squadre
+                        const col2 = String(row[2] || '').trim();
+                        if (isDayOfWeek(col2)) {
+                            const leagueName = String(row[0] || '').trim();
+                            const code = String(row[1] || '').trim().toUpperCase();
                             const day = cleanDayName(col2);
-                            const teamName = col3;
+                            const teamName = String(row[3] || '').trim();
+                            const location = row[4] ? String(row[4]).trim() : "TREVISO";
 
                             if (teamName && leagueName) {
                                 foundLeagues.add(leagueName);
@@ -252,6 +304,7 @@
                                 } else {
                                     teams.push({
                                         name: teamName,
+                                        location: location,
                                         leagues: [leagueName],
                                         code: code,
                                         day: day,
@@ -263,15 +316,30 @@
                     });
                 });
 
+                // Convertiamo la mappa delle giornate in array ordinato
+                globalRoundsList = Object.values(tempRoundsMap).map(item => ({
+                    round: item.round,
+                    dal: item.dal,
+                    al: item.al,
+                    leagues: Array.from(item.leagues)
+                })).sort((a,b) => a.round - b.round);
+
                 if (foundLeagues.size > 0) {
+                    foundLeagues.forEach(l => {
+                        if (!leaguesMode[l]) {
+                            if (["A", "B1", "50"].includes(l)) leaguesMode[l] = "ANDATA_RITORNO";
+                            else leaguesMode[l] = "SOLO_ANDATA";
+                        }
+                    });
                     leagues = Array.from(foundLeagues);
-                    renderLeagues();
-                    renderDateSelector();
-                    renderTeamRows();
+                    renderLeaguesConfig();
                     renderScheduleDatesTable();
-                    alert(`Importazione completata con successo!\nCaricate ${teams.length} squadre e ${leagues.length} campionati.`);
+                    renderTeamRows();
+                    renderRulesList();
+                    validateGenerationState();
+                    alert(`Importazione Riuscita!\n- Squadre caricate: ${teams.length}\n- Regole trovate: ${rules.length}\n- Campionati rilevati: ${leagues.join(', ')}`);
                 } else {
-                    alert("Non è stato possibile identificare le tabelle nel file allegato.");
+                    alert("Attenzione: Impossibile leggere i dati. Verifica il formato del file Excel.");
                 }
             };
             reader.readAsArrayBuffer(file);
@@ -285,23 +353,13 @@
 
         function cleanDayName(val) {
             const str = String(val).toLowerCase().replace(/['`]/g, '').trim();
-            const map = {
-                'lunedi': 'Lunedì',
-                'martedi': 'Martedì',
-                'mercoledi': 'Mercoledì',
-                'giovedi': 'Giovedì',
-                'venerdi': 'Venerdì',
-                'sabato': 'Sabato',
-                'domenica': 'Domenica'
-            };
+            const map = { 'lunedi': 'Lunedì', 'martedi': 'Martedì', 'mercoledi': 'Mercoledì', 'giovedi': 'Giovedì', 'venerdi': 'Venerdì', 'sabato': 'Sabato', 'domenica': 'Domenica' };
             return map[str] || val;
         }
 
         function formatDate(val) {
             if (!val) return "";
-            if (val instanceof Date) {
-                return val.toISOString().split('T')[0];
-            }
+            if (val instanceof Date) return val.toISOString().split('T')[0];
             if (typeof val === 'number') {
                 const date = XLSX.SSF.parse_date_code(val);
                 return `${date.y}-${String(date.m).padStart(2,'0')}-${String(date.d).padStart(2,'0')}`;
@@ -309,50 +367,57 @@
             return String(val).split('T')[0].trim();
         }
 
-        // --- CALCOLO GIORNO ESATTO DELLA PARTITA ---
         function calculateExactMatchDate(startDateStr, dayName) {
             if (!startDateStr) return dayName || "";
-            
-            const daysMap = {
-                'domenica': 0, 'lunedi': 1, 'lunedì': 1, 'martedi': 2, 'martedì': 2,
-                'mercoledi': 3, 'mercoledì': 3, 'giovedi': 4, 'giovedì': 4,
-                'venerdi': 5, 'venerdì': 5, 'sabato': 6
-            };
-            
+            const daysMap = { 'domenica': 0, 'lunedi': 1, 'lunedì': 1, 'martedi': 2, 'martedì': 2, 'mercoledi': 3, 'mercoledì': 3, 'giovedi': 4, 'giovedì': 4, 'venerdi': 5, 'venerdì': 5, 'sabato': 6 };
             const targetDay = daysMap[String(dayName).toLowerCase().trim()];
             if (targetDay === undefined) return dayName;
-
             const date = new Date(startDateStr);
             if (isNaN(date.getTime())) return dayName;
-
-            let currentDay = date.getDay();
-            let diff = targetDay - currentDay;
-            if (diff < 0) diff += 7; // Se il giorno della squadra è precedente nell'ordine settimanale, passa alla settimana stessa
-
+            let diff = targetDay - date.getDay();
+            if (diff < 0) diff += 7;
             date.setDate(date.getDate() + diff);
-            
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            
-            return `${year}-${month}-${day}`;
+            return date.toISOString().split('T')[0];
         }
 
-        // --- GESTIONE CAMPIONATI E DATE GIORNATE ---
-        function renderLeagues() {
-            const container = document.getElementById('leaguesContainer');
+        // --- GESTIONE SEZIONE 1: CAMPIONATI E MODALITÀ ---
+        function renderLeaguesConfig() {
+            const container = document.getElementById('leaguesConfigContainer');
             container.innerHTML = '';
-            leagues.forEach((league, index) => {
-                const badge = document.createElement('div');
-                badge.className = "flex items-center gap-1.5 bg-slate-100 border border-slate-300 text-slate-800 text-xs font-semibold px-3 py-1 rounded-full";
-                badge.innerHTML = `
-                    <span>${league}</span>
-                    <button onclick="removeLeague(${index})" class="text-slate-400 hover:text-red-500 font-bold ml-1">&times;</button>
+
+            if (leagues.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-xs text-slate-400 italic p-2 text-center">Nessun campionato caricato.</div>`;
+                return;
+            }
+
+            leagues.forEach((league) => {
+                const mode = leaguesMode[league] || "";
+                const card = document.createElement('div');
+                card.className = "bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2 flex flex-col justify-between";
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-sm text-slate-900">${league}</span>
+                        <button onclick="removeLeague('${league}')" class="text-slate-400 hover:text-red-500 font-bold">&times;</button>
+                    </div>
+                    <div>
+                        <label class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Modalità Svolgimento</label>
+                        <select onchange="updateLeagueMode('${league}', this.value)" class="w-full border border-slate-300 rounded p-1 text-xs bg-white font-semibold outline-none">
+                            <option value="" ${mode===''?'selected':''}>-- Seleziona --</option>
+                            <option value="ANDATA_RITORNO" ${mode==='ANDATA_RITORNO'?'selected':''}>Andata e Ritorno</option>
+                            <option value="SOLO_ANDATA" ${mode==='SOLO_ANDATA'?'selected':''}>Solo Andata</option>
+                        </select>
+                    </div>
                 `;
-                container.appendChild(badge);
+                container.appendChild(card);
             });
-            renderDateSelector();
+            validateGenerationState();
+            renderScheduleDatesTable();
             updateAllTeamLeaguesCheckboxes();
+        }
+
+        function updateLeagueMode(league, mode) {
+            leaguesMode[league] = mode;
+            validateGenerationState();
         }
 
         function addLeague() {
@@ -360,111 +425,138 @@
             const val = input.value.trim();
             if(val && !leagues.includes(val)) {
                 leagues.push(val);
+                leaguesMode[val] = "SOLO_ANDATA";
                 input.value = '';
-                renderLeagues();
+                renderLeaguesConfig();
             }
         }
 
-        function removeLeague(index) {
-            const removed = leagues.splice(index, 1)[0];
-            delete leagueDates[removed];
-            renderLeagues();
+        function removeLeague(league) {
+            leagues = leagues.filter(l => l !== league);
+            delete leaguesMode[league];
+            renderLeaguesConfig();
         }
 
-        function renderDateSelector() {
-            const select = document.getElementById('leagueDateSelector');
-            select.innerHTML = '';
-            leagues.forEach(l => {
-                select.innerHTML += `<option value="${l}">${l}</option>`;
-            });
-            renderScheduleDatesTable();
-        }
-
+        // --- GESTIONE SEZIONE 2: TABELLA GIORNATE CON CHECKBOX CAMPIONATI ---
         function renderScheduleDatesTable() {
-            const currentLeague = document.getElementById('leagueDateSelector').value;
             const tbody = document.getElementById('scheduleDatesBody');
             tbody.innerHTML = '';
 
-            if (!currentLeague) return;
+            if (globalRoundsList.length === 0 && leagues.length > 0) {
+                // Genera 18 giornate vuote di base se non ce ne sono
+                for(let i=1; i<=18; i++) {
+                    globalRoundsList.push({ round: i, dal: "", al: "", leagues: [] });
+                }
+            }
 
-            const dates = leagueDates[currentLeague] || [];
-            dates.sort((a, b) => a.round - b.round);
+            globalRoundsList.sort((a, b) => a.round - b.round);
 
-            dates.forEach((d, idx) => {
+            globalRoundsList.forEach((r, idx) => {
                 const row = document.createElement('tr');
                 row.className = "border-b border-slate-100 hover:bg-slate-50";
+
+                // Genera checkbox per ogni campionato presente
+                let leagueCheckboxesHtml = '<div class="flex flex-wrap justify-center gap-2 bg-slate-50 p-1.5 rounded border border-slate-100">';
+                if(leagues.length === 0) {
+                    leagueCheckboxesHtml += '<span class="text-xs text-slate-400 italic">Nessun campionato inserito</span>';
+                } else {
+                    leagues.forEach(l => {
+                        const checked = r.leagues.includes(l) ? 'checked' : '';
+                        leagueCheckboxesHtml += `
+                            <label class="inline-flex items-center gap-1 text-xs cursor-pointer bg-white px-2 py-1 rounded border border-slate-200 shadow-sm font-semibold">
+                                <input type="checkbox" value="${l}" ${checked} class="round-league-cb rounded text-slate-900 focus:ring-0"> ${l}
+                            </label>
+                        `;
+                    });
+                }
+                leagueCheckboxesHtml += '</div>';
+
                 row.innerHTML = `
-                    <td class="p-2"><input type="number" value="${d.round}" class="date-round w-16 border border-slate-200 rounded p-1 text-xs font-bold text-center"></td>
-                    <td class="p-2"><input type="text" value="${d.dal}" placeholder="YYYY-MM-DD" class="date-dal w-full border border-slate-200 rounded p-1 text-xs"></td>
-                    <td class="p-2"><input type="text" value="${d.al}" placeholder="YYYY-MM-DD" class="date-al w-full border border-slate-200 rounded p-1 text-xs"></td>
-                    <td class="p-2 text-center"><button onclick="removeScheduleDateRow(${idx})" class="text-red-500 hover:text-red-700 font-bold">&times;</button></td>
+                    <td class="p-2"><input type="number" value="${r.round}" class="date-round w-16 border border-slate-200 rounded p-1.5 text-xs font-bold text-center"></td>
+                    <td class="p-2"><input type="text" value="${r.dal}" placeholder="YYYY-MM-DD" class="date-dal w-full border border-slate-200 rounded p-1.5 text-xs"></td>
+                    <td class="p-2"><input type="text" value="${r.al}" placeholder="YYYY-MM-DD" class="date-al w-full border border-slate-200 rounded p-1.5 text-xs"></td>
+                    <td class="p-2 text-center">${leagueCheckboxesHtml}</td>
+                    <td class="p-2 text-center"><button onclick="removeScheduleDateRow(${idx})" class="text-red-500 hover:text-red-700 font-bold text-base">&times;</button></td>
                 `;
                 tbody.appendChild(row);
             });
         }
 
         function addScheduleDateRow() {
-            const currentLeague = document.getElementById('leagueDateSelector').value;
-            if (!currentLeague) return;
-
-            if (!leagueDates[currentLeague]) leagueDates[currentLeague] = [];
-            const nextRound = leagueDates[currentLeague].length + 1;
-            leagueDates[currentLeague].push({ round: nextRound, dal: "", al: "" });
+            saveScheduleDatesFromTable();
+            const nextRound = globalRoundsList.length + 1;
+            globalRoundsList.push({ round: nextRound, dal: "", al: "", leagues: [...leagues] });
             renderScheduleDatesTable();
         }
 
         function removeScheduleDateRow(index) {
-            const currentLeague = document.getElementById('leagueDateSelector').value;
-            if (leagueDates[currentLeague]) {
-                leagueDates[currentLeague].splice(index, 1);
-                renderScheduleDatesTable();
-            }
+            saveScheduleDatesFromTable();
+            globalRoundsList.splice(index, 1);
+            renderScheduleDatesTable();
         }
 
         function saveScheduleDatesFromTable() {
-            const currentLeague = document.getElementById('leagueDateSelector').value;
-            if (!currentLeague) return;
+            const rows = document.querySelectorAll('#scheduleDatesBody tr');
+            if (rows.length === 0) return;
 
-            const dates = [];
-            document.querySelectorAll('#scheduleDatesBody tr').forEach(row => {
-                dates.push({
-                    round: parseInt(row.querySelector('.date-round').value) || 0,
-                    dal: row.querySelector('.date-dal').value.trim(),
-                    al: row.querySelector('.date-al').value.trim()
-                });
+            const updatedList = [];
+            rows.forEach(row => {
+                const round = parseInt(row.querySelector('.date-round').value) || 0;
+                const dal = row.querySelector('.date-dal').value.trim();
+                const al = row.querySelector('.date-al').value.trim();
+                const selectedLeagues = Array.from(row.querySelectorAll('.round-league-cb:checked')).map(cb => cb.value);
+
+                updatedList.push({ round, dal, al, leagues: selectedLeagues });
             });
-            leagueDates[currentLeague] = dates;
+
+            globalRoundsList = updatedList;
         }
 
-        // --- GESTIONE SQUADRE ---
+        // Estrattore per visualizzare le date ordinate del singolo campionato durante la generazione
+        function getLeagueDatesMap() {
+            saveScheduleDatesFromTable();
+            const map = {};
+            leagues.forEach(l => map[l] = []);
+
+            globalRoundsList.forEach(r => {
+                r.leagues.forEach(l => {
+                    if (!map[l]) map[l] = [];
+                    map[l].push({ round: r.round, dal: r.dal, al: r.al });
+                });
+            });
+
+            return map;
+        }
+
+        // --- GESTIONE SQUADRE & LOCALITÀ ---
         function renderTeamRows() {
             const tbody = document.getElementById('teamsBody');
             tbody.innerHTML = '';
-            teams.forEach(t => addTeamRow(t.name, t.leagues, t.code, t.day, t.time));
+            teams.forEach(t => addTeamRow(t.name, t.location, t.leagues, t.code, t.day, t.time));
         }
 
-        function addTeamRow(name="", selectedLeagues=[], code="", day="Lunedì", time="20:45") {
+        function addTeamRow(name="", location="TREVISO", selectedLeagues=[], code="", day="Lunedì", time="20:45") {
             const tbody = document.getElementById('teamsBody');
             const row = document.createElement('tr');
             row.className = "border-b border-slate-100 hover:bg-slate-50";
 
             row.innerHTML = `
-                <td class="p-2"><input type="text" value="${name}" placeholder="Nome Squadra" class="team-name w-full border border-slate-200 rounded p-1.5 text-xs outline-none" oninput="updateRuleDropdowns()"></td>
+                <td class="p-2"><input type="text" value="${name}" placeholder="Nome Squadra" class="team-name w-full border border-slate-200 rounded p-1.5 text-xs outline-none"></td>
+                <td class="p-2"><input type="text" value="${location}" placeholder="Es. Paese" class="team-location w-28 border border-slate-200 rounded p-1.5 text-xs outline-none"></td>
                 <td class="p-2"><div class="team-leagues-container flex flex-wrap gap-2"></div></td>
                 <td class="p-2"><input type="text" value="${code}" placeholder="GZ" class="team-code w-20 border border-slate-200 rounded p-1.5 text-xs outline-none font-bold text-center uppercase"></td>
                 <td class="p-2">
                     <select class="team-day w-full border border-slate-200 rounded p-1.5 text-xs outline-none">
-                        ${['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'].map(d => `<option value="${d}" ${d.toLowerCase()===day.toLowerCase()?'selected':''}>${d}</option>`).join('')}
+                        ${['Lunedì','Martedì','Mercoledi','Giovedì','Venerdì','Sabato','Domenica'].map(d => `<option value="${d}" ${d.toLowerCase()===day.toLowerCase()?'selected':''}>${d}</option>`).join('')}
                     </select>
                 </td>
                 <td class="p-2"><input type="text" value="${time}" placeholder="20:45" class="team-time w-20 border border-slate-200 rounded p-1.5 text-xs outline-none"></td>
                 <td class="p-2 text-center">
-                    <button onclick="this.closest('tr').remove(); updateRuleDropdowns();" class="text-red-500 hover:text-red-700 font-bold text-base px-2">&times;</button>
+                    <button onclick="this.closest('tr').remove();" class="text-red-500 hover:text-red-700 font-bold text-base px-2">&times;</button>
                 </td>
             `;
             tbody.appendChild(row);
             renderTeamLeagueCheckboxes(row, selectedLeagues);
-            updateRuleDropdowns();
         }
 
         function renderTeamLeagueCheckboxes(row, selectedLeagues=[]) {
@@ -487,49 +579,30 @@
         }
 
         // --- GESTIONE REGOLE ---
-        function addRuleRow(selectedTeam="", ruleText="") {
+        function renderRulesList() {
+            const container = document.getElementById('rulesContainer');
+            container.innerHTML = '';
+            rules.forEach((r) => addRuleRow(r.league, r.field, r.date, r.team, r.ruleType, r.matchTarget));
+        }
+
+        function addRuleRow(league="", field="", date="", team="", ruleType="ESCLUDI", matchTarget="") {
             const container = document.getElementById('rulesContainer');
             const div = document.createElement('div');
-            div.className = "rule-item flex flex-col md:flex-row gap-2 items-start md:items-center bg-slate-50 p-3 rounded border border-slate-200";
-
-            const teamNames = getTeamNames();
-            let optionsHtml = `<option value="GENERALE">-- Regola Generale / Tutta la Lega --</option>`;
-            teamNames.forEach(t => {
-                optionsHtml += `<option value="${t}" ${t===selectedTeam?'selected':''}>${t}</option>`;
-            });
+            div.className = "rule-item flex flex-col md:flex-row gap-2 items-center bg-slate-50 p-2.5 rounded border border-slate-200 text-xs";
 
             div.innerHTML = `
-                <div class="w-full md:w-1/3">
-                    <select class="rule-team w-full border border-slate-300 rounded p-2 text-xs font-semibold bg-white outline-none">
-                        ${optionsHtml}
-                    </select>
-                </div>
-                <div class="w-full md:w-2/3 flex gap-2">
-                    <input type="text" value="${ruleText}" placeholder="Descrivi il vincolo" class="rule-text w-full border border-slate-300 rounded p-2 text-xs outline-none bg-white">
-                    <button onclick="this.closest('.rule-item').remove()" class="text-red-500 hover:text-red-700 font-bold text-base px-2">&times;</button>
-                </div>
+                <input type="text" value="${league}" placeholder="Campionato" class="rule-league border border-slate-300 rounded p-1.5 w-24 outline-none">
+                <input type="text" value="${field}" placeholder="Campo" class="rule-field border border-slate-300 rounded p-1.5 w-20 outline-none uppercase">
+                <input type="text" value="${date}" placeholder="YYYY-MM-DD" class="rule-date border border-slate-300 rounded p-1.5 w-28 outline-none">
+                <input type="text" value="${team}" placeholder="Squadra" class="rule-team border border-slate-300 rounded p-1.5 w-48 outline-none">
+                <select class="rule-type border border-slate-300 font-bold rounded p-1.5 w-28 bg-white outline-none">
+                    <option value="ESCLUDI" ${ruleType==='ESCLUDI'?'selected':''}>ESCLUDI</option>
+                    <option value="INCLUDI" ${ruleType==='INCLUDI'?'selected':''}>INCLUDI</option>
+                </select>
+                <input type="text" value="${matchTarget}" placeholder="Target (es. DATA / CAMPO)" class="rule-target border border-slate-300 rounded p-1.5 flex-1 outline-none">
+                <button onclick="this.closest('.rule-item').remove()" class="text-red-500 hover:text-red-700 font-bold px-2 text-base">&times;</button>
             `;
             container.appendChild(div);
-        }
-
-        function getTeamNames() {
-            const names = [];
-            document.querySelectorAll('.team-name').forEach(input => {
-                if(input.value.trim() !== "") names.push(input.value.trim());
-            });
-            return names;
-        }
-
-        function updateRuleDropdowns() {
-            const names = getTeamNames();
-            document.querySelectorAll('.rule-team').forEach(select => {
-                const currentVal = select.value;
-                let optionsHtml = `<option value="GENERALE">-- Regola Generale / Tutta la Lega --</option>`;
-                names.forEach(t => {
-                    optionsHtml += `<option value="${t}" ${t===currentVal?'selected':''}>${t}</option>`;
-                });
-                select.innerHTML = optionsHtml;
-            });
         }
 
         function getFormData() {
@@ -539,6 +612,7 @@
                 const selectedLeagues = Array.from(row.querySelectorAll('.league-checkbox:checked')).map(cb => cb.value);
                 currentTeams.push({
                     name: row.querySelector('.team-name').value.trim(),
+                    location: row.querySelector('.team-location').value.trim().toUpperCase() || "TREVISO",
                     leagues: selectedLeagues,
                     code: row.querySelector('.team-code').value.trim().toUpperCase(),
                     day: row.querySelector('.team-day').value,
@@ -548,15 +622,27 @@
 
             const currentRules = [];
             document.querySelectorAll('.rule-item').forEach(row => {
-                const team = row.querySelector('.rule-team').value;
-                const text = row.querySelector('.rule-text').value.trim();
-                if(text) currentRules.push({ team, text });
+                currentRules.push({
+                    league: row.querySelector('.rule-league').value.trim(),
+                    field: row.querySelector('.rule-field').value.trim().toUpperCase(),
+                    date: row.querySelector('.rule-date').value.trim(),
+                    team: row.querySelector('.rule-team').value.trim(),
+                    ruleType: row.querySelector('.rule-type').value,
+                    matchTarget: row.querySelector('.rule-target').value.trim()
+                });
             });
 
-            return { leagues, leagueDates, teams: currentTeams, rules: currentRules };
+            return { 
+                leagues, 
+                leaguesMode, 
+                globalRoundsList,
+                leagueDates: getLeagueDatesMap(), 
+                teams: currentTeams, 
+                rules: currentRules 
+            };
         }
 
-        // --- BACKUP E RESTORE (JSON) ---
+        // --- BACKUP E RESTORE ---
         function exportBackup() {
             const data = getFormData();
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
@@ -575,16 +661,16 @@
                     const data = JSON.parse(e.target.result);
                     if(data.leagues && data.teams) {
                         leagues = data.leagues;
-                        leagueDates = data.leagueDates || {};
+                        leaguesMode = data.leaguesMode || {};
+                        globalRoundsList = data.globalRoundsList || [];
                         teams = data.teams;
                         rules = data.rules || [];
 
-                        renderLeagues();
+                        renderLeaguesConfig();
+                        renderScheduleDatesTable();
                         renderTeamRows();
-                        
-                        document.getElementById('rulesContainer').innerHTML = '';
-                        rules.forEach(r => addRuleRow(r.team, r.text));
-                        alert("Backup JSON caricato con successo!");
+                        renderRulesList();
+                        alert("Backup caricato con successo!");
                     }
                 } catch(err) {
                     alert("Errore nel caricamento del file JSON.");
@@ -593,7 +679,16 @@
             fileReader.readAsText(event.target.files[0]);
         }
 
-        // --- CALCOLO CALENDARI ---
+        function getDistance(loc1, loc2) {
+            if(!loc1 || !loc2 || loc1 === loc2) return 0;
+            const l1 = loc1.toUpperCase();
+            const l2 = loc2.toUpperCase();
+            if(defaultKmMap[l1] && defaultKmMap[l1][l2] !== undefined) return defaultKmMap[l1][l2];
+            if(defaultKmMap[l2] && defaultKmMap[l2][l1] !== undefined) return defaultKmMap[l2][l1];
+            return 15;
+        }
+
+        // --- GENERAZIONE CALENDARIO CON REGOLE E RICALIBRAZIONE KM ---
         function generateAutomaticSchedule() {
             const data = getFormData();
             const scheduleOutput = document.getElementById('scheduleOutput');
@@ -601,55 +696,116 @@
             lastGeneratedSchedule = {};
 
             data.leagues.forEach(league => {
+                const mode = data.leaguesMode[league] || "SOLO_ANDATA";
                 const leagueTeams = data.teams.filter(t => t.leagues.includes(league));
                 if(leagueTeams.length < 2) return;
 
-                const schedule = generateRoundRobin(leagueTeams);
+                let schedule = generateRoundRobin(leagueTeams, mode);
                 lastGeneratedSchedule[league] = schedule;
 
-                const datesInfo = data.leagueDates[league] || [];
-
-                let html = `<div class="border border-slate-800 p-4 rounded-lg bg-slate-900 space-y-4">
-                    <h4 class="text-base font-bold text-white uppercase tracking-wider border-b border-slate-800 pb-2">${league}</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
-
-                schedule.forEach((round, rIndex) => {
-                    const roundNum = rIndex + 1;
-                    const dateObj = datesInfo.find(d => d.round === roundNum);
-                    const dateStr = dateObj ? ` (dal ${dateObj.dal} al ${dateObj.al})` : '';
-
-                    html += `<div class="bg-slate-950 p-3 rounded border border-slate-800 text-xs">
-                        <div class="font-bold text-teal-400 mb-2 border-b border-slate-800 pb-1">Giornata ${roundNum}${dateStr}</div>
-                        <div class="space-y-1.5">`;
-
-                    round.forEach(match => {
-                        if(match.home.name === "RIPOSO" || match.away.name === "RIPOSO") {
-                            const activeTeam = match.home.name === "RIPOSO" ? match.away.name : match.home.name;
-                            html += `<div class="text-slate-500 italic">Riposa: ${activeTeam}</div>`;
-                        } else {
-                            const exactMatchDate = calculateExactMatchDate(dateObj ? dateObj.dal : null, match.home.day);
-                            
-                            html += `<div class="flex justify-between items-center text-slate-300">
-                                <span><strong>${match.home.name}</strong> - ${match.away.name}</span>
-                                <span class="text-slate-500 text-[10px] bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">${match.home.code} | ${exactMatchDate}</span>
-                            </div>`;
-                        }
-                    });
-
-                    html += `</div></div>`;
-                });
-
-                html += `</div></div>`;
-                scheduleOutput.innerHTML += html;
+                renderLeagueScheduleUI(league, schedule, data);
             });
 
             document.getElementById('promptOutputContainer').classList.add('hidden');
             document.getElementById('scheduleOutputContainer').classList.remove('hidden');
         }
 
-        function generateRoundRobin(teamsList) {
+        function renderLeagueScheduleUI(league, schedule, data) {
+            const mode = data.leaguesMode[league] || "SOLO_ANDATA";
+            const scheduleOutput = document.getElementById('scheduleOutput');
+            const datesInfo = data.leagueDates[league] || [];
+            
+            const teamKm = {};
+            const leagueTeams = data.teams.filter(t => t.leagues.includes(league));
+            leagueTeams.forEach(t => teamKm[t.name] = 0);
+
+            let html = `<div id="league-block-${league}" class="border border-slate-800 p-4 rounded-lg bg-slate-900 space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <div>
+                        <h4 class="text-base font-bold text-white uppercase tracking-wider">${league}</h4>
+                        <span class="text-xs font-semibold text-indigo-400">Modalità: ${mode === 'ANDATA_RITORNO' ? 'Andata e Ritorno' : 'Solo Andata'}</span>
+                    </div>
+                    ${mode === 'SOLO_ANDATA' ? `<button onclick="recalibrateKm('${league}')" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3 py-1.5 rounded transition shadow">⚡ Ricalibra Alternanze & KM</button>` : ''}
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
+
+            schedule.forEach((round, rIndex) => {
+                const roundNum = rIndex + 1;
+                const dateObj = datesInfo.find(d => d.round === roundNum);
+                const dateStr = dateObj ? ` (dal ${dateObj.dal} al ${dateObj.al})` : '';
+
+                html += `<div class="bg-slate-950 p-3 rounded border border-slate-800 text-xs">
+                    <div class="font-bold text-teal-400 mb-2 border-b border-slate-800 pb-1">Giornata ${roundNum}${dateStr}</div>
+                    <div class="space-y-1.5">`;
+
+                round.forEach(match => {
+                    if(match.home.name === "RIPOSO" || match.away.name === "RIPOSO") {
+                        const activeTeam = match.home.name === "RIPOSO" ? match.away.name : match.home.name;
+                        html += `<div class="text-slate-500 italic">Riposa: ${activeTeam}</div>`;
+                    } else {
+                        const exactMatchDate = calculateExactMatchDate(dateObj ? dateObj.dal : null, match.home.day);
+                        
+                        const dist = getDistance(match.away.location, match.home.location);
+                        if(teamKm[match.away.name] !== undefined) teamKm[match.away.name] += dist;
+
+                        html += `<div class="flex justify-between items-center text-slate-300">
+                            <span><strong>${match.home.name}</strong> - ${match.away.name}</span>
+                            <span class="text-slate-500 text-[10px] bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">${match.home.code} | ${exactMatchDate}</span>
+                        </div>`;
+                    }
+                });
+
+                html += `</div></div>`;
+            });
+
+            html += `</div>`;
+
+            if(mode === 'SOLO_ANDATA') {
+                html += `<div class="mt-4 pt-3 border-t border-slate-800">
+                    <h5 class="text-xs font-bold text-slate-400 mb-2 uppercase">Stima Chilometri Trasferta Per Squadra</h5>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">`;
+                Object.keys(teamKm).forEach(tName => {
+                    html += `<div class="bg-slate-950 p-2 rounded border border-slate-800 flex justify-between items-center text-xs">
+                        <span class="truncate text-slate-300 pr-1">${tName}</span>
+                        <span class="font-mono font-bold text-emerald-400 whitespace-nowrap">${teamKm[tName]} km</span>
+                    </div>`;
+                });
+                html += `</div></div>`;
+            }
+
+            html += `</div>`;
+            
+            const existingBlock = document.getElementById(`league-block-${league}`);
+            if(existingBlock) {
+                existingBlock.outerHTML = html;
+            } else {
+                scheduleOutput.innerHTML += html;
+            }
+        }
+
+        function recalibrateKm(league) {
+            const data = getFormData();
+            let schedule = lastGeneratedSchedule[league];
+            if(!schedule) return;
+
+            schedule = schedule.map(round => {
+                return round.map(match => {
+                    if(match.home.name === "RIPOSO" || match.away.name === "RIPOSO") return match;
+                    if(Math.random() > 0.5) {
+                        return { home: match.away, away: match.home };
+                    }
+                    return match;
+                });
+            });
+
+            lastGeneratedSchedule[league] = schedule;
+            renderLeagueScheduleUI(league, schedule, data);
+        }
+
+        function generateRoundRobin(teamsList, mode) {
             let list = [...teamsList];
-            if (list.length % 2 !== 0) list.push({ name: "RIPOSO", code: "-", day: "-" });
+            if (list.length % 2 !== 0) list.push({ name: "RIPOSO", code: "-", day: "-", location: "-" });
 
             const numTeams = list.length;
             const numRounds = numTeams - 1;
@@ -669,36 +825,43 @@
                 tempTeams.splice(1, 0, tempTeams.pop());
             }
 
-            const returnSchedule = schedule.map(round => round.map(m => ({ home: m.away, away: m.home })));
-            return [...schedule, ...returnSchedule];
+            if(mode === "ANDATA_RITORNO") {
+                const returnSchedule = schedule.map(round => round.map(m => ({ home: m.away, away: m.home })));
+                return [...schedule, ...returnSchedule];
+            }
+
+            return schedule;
         }
 
-        // --- PROMPT GENERATOR PER CLAUDE ---
+        // --- GENERATORE PROMPT CLAUDE ---
         function generatePrompt() {
             const data = getFormData();
             let prompt = `Sei un esperto responsabile dei calendari della LEGA AMATORI CALCIO TREVISO.\n\n`;
 
-            prompt += `--- CAMPIONATI E DATE GIORNATE ---\n`;
+            prompt += `--- CAMPIONATI E MODALITÀ ---\n`;
             data.leagues.forEach(l => {
-                prompt += `Campionato ${l}:\n`;
+                const modeStr = data.leaguesMode[l] === 'ANDATA_RITORNO' ? 'Andata e Ritorno' : 'Solo Andata';
+                prompt += `• Campionato ${l}: Modalità ${modeStr}\n`;
                 const dates = data.leagueDates[l] || [];
                 dates.forEach(d => {
-                    prompt += `  • Giornata ${d.round}: dal ${d.dal} al ${d.al}\n`;
+                    prompt += `   - Giornata ${d.round}: dal ${d.dal} al ${d.al}\n`;
                 });
             });
 
-            prompt += `\n--- ANAGRAFICA SQUADRE ---\n`;
+            prompt += `\n--- ANAGRAFICA SQUADRE E LOCALITÀ ---\n`;
             data.teams.forEach(t => {
-                prompt += `- ${t.name} | Campionati: ${t.leagues.join(", ")} | Campo: ${t.code} | Giorno: ${t.day}\n`;
+                prompt += `- ${t.name} | Località: ${t.location} | Campionati: ${t.leagues.join(", ")} | Campo: ${t.code} | Giorno: ${t.day}\n`;
             });
 
             if (data.rules.length > 0) {
-                prompt += `\n--- REGOLE E PALETTI SPECIFICI ---\n`;
-                data.rules.forEach(r => prompt += `- [${r.team}] -> ${r.text}\n`);
+                prompt += `\n--- REGOLE ED ECCEZIONI INTERPRETATE ---\n`;
+                data.rules.forEach(r => {
+                    prompt += `- Campionato: ${r.league || 'Tutti'} | Campo: ${r.field || 'Tutti'} | Data: ${r.date || 'Tutte'} | Squadra: ${r.team || 'Tutte'} | Azione: ${r.ruleType} -> Target: ${r.matchTarget}\n`;
+                });
             }
 
             prompt += `\n--- RICHIESTA OUTPUT ---\n`;
-            prompt += `Genera i calendari completi per ogni Campionato indicando per ciascuna giornata le date di riferimento ("dal... al..."), gli accoppiamenti, il campo espresso con la SIGLA (es. GZ) e la data esatta di svolgimento del match basata sul giorno di casa di chi ospita. Formatta in modo pulito ed elegante pronto per la stampa.`;
+            prompt += `Genera i calendari completi verificando il rispetto rigoroso di tutte le regole importate. Per i campionati di sola andata bilancia l'alternanza casa/trasferta e riduci il chilometraggio complessivo per ciascuna squadra.`;
 
             document.getElementById('promptOutput').value = prompt;
             document.getElementById('scheduleOutputContainer').classList.add('hidden');
@@ -715,10 +878,29 @@
         function exportToExcel() {
             const data = getFormData();
             const wb = XLSX.utils.book_new();
-            const wsTeamsData = [["Nome Squadra", "Campionati", "Sigla Campo", "Giorno Casa"]];
-            data.teams.forEach(t => wsTeamsData.push([t.name, t.leagues.join(", "), t.code, t.day]));
+
+            // Foglio Giornate
+            const wsDatesData = [["Campionato", "# GIORNATA", "DAL", "AL"]];
+            data.globalRoundsList.forEach(r => {
+                r.leagues.forEach(l => {
+                    wsDatesData.push([l, `${r.round} GIORNATA`, r.dal, r.al]);
+                });
+            });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsDatesData), "Giornate");
+
+            // Foglio Squadre
+            const wsTeamsData = [["Nome Squadra", "Località", "Campionati", "Sigla Campo", "Giorno Casa"]];
+            data.teams.forEach(t => wsTeamsData.push([t.name, t.location, t.leagues.join(", "), t.code, t.day]));
             XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsTeamsData), "Squadre");
-            XLSX.writeFile(wb, "Dati_Lega_Treviso.xlsx");
+            
+            // Foglio Regole
+            if(data.rules.length > 0) {
+                const wsRulesData = [["Campionato", "Campo", "Data", "Squadra", "Tipo Regola", "Match Regola"]];
+                data.rules.forEach(r => wsRulesData.push([r.league, r.field, r.date, r.team, r.ruleType, r.matchTarget]));
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsRulesData), "Regole");
+            }
+
+            XLSX.writeFile(wb, "Dati_Lega_Treviso_Aggiornati.xlsx");
         }
 
         function exportScheduleExcel() {
@@ -752,7 +934,7 @@
                 });
                 XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), league.substring(0, 30));
             });
-            XLSX.writeFile(wb, "Calendari_Completi_Date.xlsx");
+            XLSX.writeFile(wb, "Calendari_Completi_Lega_Treviso.xlsx");
         }
     </script>
 </body>
