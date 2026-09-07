@@ -33,9 +33,9 @@
         <!-- HEADER CON LOGO LEGA AMATORI CALCIO TREVISO E PALETTE BLU/ARANCIONE -->
         <header class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 border-b-4 border-brand-orange text-white p-6 rounded-xl shadow-xl flex flex-col md:flex-row gap-4 justify-between items-center">
             <div class="flex items-center gap-4">
-                <!-- Logo Ufficiale Lega Amatori Calcio Treviso -->
-                <div class="bg-white p-2 rounded-lg shadow-md border border-brand-orange">
-                    <img src="https://www.laclega.it/images/logo.jpg" alt="Logo Lega Amatori Calcio Treviso" class="h-16 w-auto object-contain" onerror="this.src='https://www.laclega.it/public/upload/logo.jpg'">
+                <!-- Logo Ufficiale Vettoriale (SVG Embed) -->
+                <div class="bg-white p-2 rounded-lg shadow-md border border-brand-orange flex items-center justify-center">
+			<img src="logo.png" alt="Logo Lega Amatori Calcio Treviso" class="h-14 w-auto object-contain">
                 </div>
                 <div>
                     <h1 class="text-2xl font-extrabold tracking-wide text-white">LEGA AMATORI CALCIO TREVISO</h1>
@@ -566,392 +566,414 @@
 
                 updatedList.push({ round, dal, al, leagues: selectedLeagues });
             });
-
             globalRoundsList = updatedList;
         }
 
-        function getLeagueDatesMap() {
-            saveScheduleDatesFromTable();
-            const map = {};
-            leagues.forEach(l => map[l] = []);
-
-            globalRoundsList.forEach(r => {
-                r.leagues.forEach(l => {
-                    if (!map[l]) map[l] = [];
-                    map[l].push({ round: r.round, dal: r.dal, al: r.al });
-                });
-            });
-
-            return map;
-        }
-
-        // --- GESTIONE SQUADRE ---
+        // --- GESTIONE SEZIONE 3: ANAGRAFICA SQUADRE ---
         function renderTeamRows() {
             const tbody = document.getElementById('teamsBody');
             tbody.innerHTML = '';
-            teams.forEach(t => addTeamRow(t.name, t.location, t.leagues, t.code, t.day, t.time));
-        }
 
-        function addTeamRow(name="", location="TREVISO", selectedLeagues=[], code="", day="Lunedì", time="20:45") {
-            const tbody = document.getElementById('teamsBody');
-            const row = document.createElement('tr');
-            row.className = "border-b border-slate-100 hover:bg-slate-50";
+            teams.forEach((t, idx) => {
+                const row = document.createElement('tr');
+                row.className = "border-b border-slate-100 hover:bg-slate-50";
 
-            row.innerHTML = `
-                <td class="p-2"><input type="text" value="${name}" placeholder="Nome Squadra" class="team-name w-full border border-slate-200 rounded p-1.5 text-xs outline-none"></td>
-                <td class="p-2"><input type="text" value="${location}" placeholder="Es. Paese" class="team-location w-28 border border-slate-200 rounded p-1.5 text-xs outline-none"></td>
-                <td class="p-2"><div class="team-leagues-container flex flex-wrap gap-2"></div></td>
-                <td class="p-2"><input type="text" value="${code}" placeholder="GZ" class="team-code w-20 border border-slate-200 rounded p-1.5 text-xs outline-none font-bold text-center uppercase"></td>
-                <td class="p-2">
-                    <select class="team-day w-full border border-slate-200 rounded p-1.5 text-xs outline-none">
-                        ${['Lunedì','Martedì','Mercoledi','Giovedì','Venerdì','Sabato','Domenica'].map(d => `<option value="${d}" ${d.toLowerCase()===day.toLowerCase()?'selected':''}>${d}</option>`).join('')}
-                    </select>
-                </td>
-                <td class="p-2"><input type="text" value="${time}" placeholder="20:45" class="team-time w-20 border border-slate-200 rounded p-1.5 text-xs outline-none"></td>
-                <td class="p-2 text-center">
-                    <button onclick="this.closest('tr').remove();" class="text-red-500 hover:text-red-700 font-bold text-base px-2">&times;</button>
-                </td>
-            `;
-            tbody.appendChild(row);
-            renderTeamLeagueCheckboxes(row, selectedLeagues);
-        }
+                let checkboxesHtml = '<div class="flex flex-wrap gap-1.5">';
+                leagues.forEach(l => {
+                    const checked = t.leagues.includes(l) ? 'checked' : '';
+                    checkboxesHtml += `
+                        <label class="inline-flex items-center gap-1 text-xs cursor-pointer bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 font-semibold">
+                            <input type="checkbox" value="${l}" ${checked} class="team-league-cb rounded text-brand-orange" onchange="updateTeamLeagues(${idx})"> ${l}
+                        </label>
+                    `;
+                });
+                checkboxesHtml += '</div>';
 
-        function renderTeamLeagueCheckboxes(row, selectedLeagues=[]) {
-            const container = row.querySelector('.team-leagues-container');
-            container.innerHTML = '';
-            leagues.forEach(l => {
-                const checked = selectedLeagues.includes(l) ? 'checked' : '';
-                const label = document.createElement('label');
-                label.className = "inline-flex items-center gap-1 text-xs cursor-pointer bg-slate-100 px-2 py-0.5 rounded border border-slate-200";
-                label.innerHTML = `<input type="checkbox" value="${l}" ${checked} class="league-checkbox text-brand-orange rounded focus:ring-0"> ${l}`;
-                container.appendChild(label);
+                row.innerHTML = `
+                    <td class="p-2"><input type="text" value="${t.name}" class="team-name border border-slate-200 rounded p-1.5 text-xs font-bold w-full" onchange="teams[${idx}].name=this.value"></td>
+                    <td class="p-2"><input type="text" value="${t.location || 'TREVISO'}" class="team-location border border-slate-200 rounded p-1.5 text-xs w-full" onchange="teams[${idx}].location=this.value"></td>
+                    <td class="p-2">${checkboxesHtml}</td>
+                    <td class="p-2"><input type="text" value="${t.code || ''}" class="team-code border border-slate-200 rounded p-1.5 text-xs w-full text-center uppercase" onchange="teams[${idx}].code=this.value"></td>
+                    <td class="p-2">
+                        <select class="team-day border border-slate-200 rounded p-1.5 text-xs w-full" onchange="teams[${idx}].day=this.value">
+                            ${['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'].map(d => `<option value="${d}" ${t.day===d?'selected':''}>${d}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td class="p-2"><input type="text" value="${t.time || '20:45'}" class="team-time border border-slate-200 rounded p-1.5 text-xs w-full text-center" onchange="teams[${idx}].time=this.value"></td>
+                    <td class="p-2 text-center"><button onclick="removeTeamRow(${idx})" class="text-red-500 hover:text-red-700 font-bold text-base">&times;</button></td>
+                `;
+                tbody.appendChild(row);
             });
+        }
+
+        function updateTeamLeagues(teamIdx) {
+            const rows = document.querySelectorAll('#teamsBody tr');
+            if (rows[teamIdx]) {
+                const selected = Array.from(rows[teamIdx].querySelectorAll('.team-league-cb:checked')).map(cb => cb.value);
+                teams[teamIdx].leagues = selected;
+            }
         }
 
         function updateAllTeamLeaguesCheckboxes() {
-            document.querySelectorAll('#teamsBody tr').forEach(row => {
-                const checkedLeagues = Array.from(row.querySelectorAll('.league-checkbox:checked')).map(cb => cb.value);
-                renderTeamLeagueCheckboxes(row, checkedLeagues);
-            });
+            renderTeamRows();
         }
 
-        // --- GESTIONE REGOLE ---
+        function addTeamRow() {
+            teams.push({
+                name: "Nuova Squadra",
+                location: "TREVISO",
+                leagues: leagues.length > 0 ? [leagues[0]] : [],
+                code: "CAMPO1",
+                day: "Lunedì",
+                time: "20:45"
+            });
+            renderTeamRows();
+        }
+
+        function removeTeamRow(index) {
+            teams.splice(index, 1);
+            renderTeamRows();
+        }
+
+        // --- GESTIONE SEZIONE 4: REGOLE SPECIALI ---
         function renderRulesList() {
             const container = document.getElementById('rulesContainer');
             container.innerHTML = '';
-            rules.forEach((r) => addRuleRow(r.league, r.field, r.date, r.team, r.ruleType, r.matchTarget));
+
+            if (rules.length === 0) {
+                container.innerHTML = `<div class="text-xs text-slate-400 italic p-2 text-center">Nessuna regola speciale inserita.</div>`;
+                return;
+            }
+
+            rules.forEach((r, idx) => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-wrap items-center gap-3 text-xs";
+                
+                card.innerHTML = `
+                    <div class="flex-1 min-w-[120px]">
+                        <span class="block text-[10px] font-bold uppercase text-slate-400">Campionato</span>
+                        <input type="text" value="${r.league || ''}" class="w-full border rounded p-1 text-xs font-bold" onchange="rules[${idx}].league=this.value">
+                    </div>
+                    <div class="flex-1 min-w-[100px]">
+                        <span class="block text-[10px] font-bold uppercase text-slate-400">Campo</span>
+                        <input type="text" value="${r.field || ''}" class="w-full border rounded p-1 text-xs" onchange="rules[${idx}].field=this.value">
+                    </div>
+                    <div class="flex-1 min-w-[110px]">
+                        <span class="block text-[10px] font-bold uppercase text-slate-400">Data</span>
+                        <input type="text" value="${r.date || ''}" placeholder="YYYY-MM-DD" class="w-full border rounded p-1 text-xs" onchange="rules[${idx}].date=this.value">
+                    </div>
+                    <div class="flex-1 min-w-[140px]">
+                        <span class="block text-[10px] font-bold uppercase text-slate-400">Squadra</span>
+                        <input type="text" value="${r.team || ''}" class="w-full border rounded p-1 text-xs" onchange="rules[${idx}].team=this.value">
+                    </div>
+                    <div class="flex-1 min-w-[150px]">
+                        <span class="block text-[10px] font-bold uppercase text-slate-400">Tipo Regola</span>
+                        <select class="w-full border rounded p-1 text-xs font-semibold" onchange="rules[${idx}].ruleType=this.value">
+                            <option value="ESCLUDI" ${r.ruleType==='ESCLUDI'?'selected':''}>ESCLUDI</option>
+                            <option value="INCLUDI" ${r.ruleType==='INCLUDI'?'selected':''}>INCLUDI</option>
+                            <option value="ALTERNANZA" ${r.ruleType==='ALTERNANZA'?'selected':''}>ALTERNANZA</option>
+                        </select>
+                    </div>
+                    <div class="flex-1 min-w-[140px]">
+                        <span class="block text-[10px] font-bold uppercase text-slate-400">Target / Avversario</span>
+                        <input type="text" value="${r.matchTarget || ''}" class="w-full border rounded p-1 text-xs" onchange="rules[${idx}].matchTarget=this.value">
+                    </div>
+                    <button onclick="removeRuleRow(${idx})" class="text-red-500 hover:text-red-700 font-bold text-lg px-2">&times;</button>
+                `;
+                container.appendChild(card);
+            });
         }
 
-        function addRuleRow(league="", field="", date="", team="", ruleType="ESCLUDI", matchTarget="") {
-            const container = document.getElementById('rulesContainer');
-            const div = document.createElement('div');
-            div.className = "rule-item flex flex-col md:flex-row gap-2 items-center bg-slate-50 p-2.5 rounded border border-slate-200 text-xs";
-
-            div.innerHTML = `
-                <input type="text" value="${league}" placeholder="Campionato" class="rule-league border border-slate-300 rounded p-1.5 w-24 outline-none">
-                <input type="text" value="${field}" placeholder="Campo" class="rule-field border border-slate-300 rounded p-1.5 w-20 outline-none uppercase">
-                <input type="text" value="${date}" placeholder="YYYY-MM-DD" class="rule-date border border-slate-300 rounded p-1.5 w-28 outline-none">
-                <input type="text" value="${team}" placeholder="Squadra" class="rule-team border border-slate-300 rounded p-1.5 w-48 outline-none">
-                <select class="rule-type border border-slate-300 font-bold rounded p-1.5 w-28 bg-white outline-none">
-                    <option value="ESCLUDI" ${ruleType==='ESCLUDI'?'selected':''}>ESCLUDI</option>
-                    <option value="INCLUDI" ${ruleType==='INCLUDI'?'selected':''}>INCLUDI</option>
-                </select>
-                <input type="text" value="${matchTarget}" placeholder="Target (es. DATA / CAMPO)" class="rule-target border border-slate-300 rounded p-1.5 flex-1 outline-none">
-                <button onclick="this.closest('.rule-item').remove()" class="text-red-500 hover:text-red-700 font-bold px-2 text-base">&times;</button>
-            `;
-            container.appendChild(div);
+        function addRuleRow() {
+            rules.push({ league: leagues[0] || '', field: '', date: '', team: '', ruleType: 'ESCLUDI', matchTarget: '' });
+            renderRulesList();
         }
 
-        function getFormData() {
+        function removeRuleRow(idx) {
+            rules.splice(idx, 1);
+            renderRulesList();
+        }
+
+        // --- ALGORITMO DI GENERAZIONE CALENDARI (BERGER / ROUND ROBIN) ---
+        function generateAutomaticSchedule() {
             saveScheduleDatesFromTable();
-            const currentTeams = [];
-            document.querySelectorAll('#teamsBody tr').forEach(row => {
-                const selectedLeagues = Array.from(row.querySelectorAll('.league-checkbox:checked')).map(cb => cb.value);
-                currentTeams.push({
-                    name: row.querySelector('.team-name').value.trim(),
-                    location: row.querySelector('.team-location').value.trim().toUpperCase() || "TREVISO",
-                    leagues: selectedLeagues,
-                    code: row.querySelector('.team-code').value.trim().toUpperCase(),
-                    day: row.querySelector('.team-day').value,
-                    time: row.querySelector('.team-time').value.trim()
+            lastGeneratedSchedule = {};
+
+            leagues.forEach(league => {
+                const leagueTeams = teams.filter(t => t.leagues.includes(league));
+                if (leagueTeams.length < 2) return;
+
+                let teamList = [...leagueTeams];
+                let isOdd = false;
+                if (teamList.length % 2 !== 0) {
+                    teamList.push({ name: "RIPOSO", location: "TREVISO", code: "-", day: "-", time: "-" });
+                    isOdd = true;
+                }
+
+                const numTeams = teamList.length;
+                const numRounds = numTeams - 1;
+                const matchesPerRound = numTeams / 2;
+
+                let schedule = [];
+                let teamIndexes = teamList.map((_, i) => i);
+
+                for (let round = 0; round < numRounds; round++) {
+                    let roundMatches = [];
+                    for (let i = 0; i < matchesPerRound; i++) {
+                        let homeIdx = teamIndexes[i];
+                        let awayIdx = teamIndexes[numTeams - 1 - i];
+
+                        if (round % 2 === 1) {
+                            let temp = homeIdx;
+                            homeIdx = awayIdx;
+                            awayIdx = temp;
+                        }
+
+                        let homeTeam = teamList[homeIdx];
+                        let awayTeam = teamList[awayIdx];
+
+                        if (homeTeam.name !== "RIPOSO" && awayTeam.name !== "RIPOSO") {
+                            roundMatches.push({ home: homeTeam, away: awayTeam });
+                        }
+                    }
+
+                    schedule.push({ roundNum: round + 1, matches: roundMatches });
+                    teamIndexes.splice(1, 0, teamIndexes.pop());
+                }
+
+                if (leaguesMode[league] === "ANDATA_RITORNO") {
+                    let returnSchedule = [];
+                    schedule.forEach(r => {
+                        let returnMatches = r.matches.map(m => ({ home: m.away, away: m.home }));
+                        returnSchedule.push({ roundNum: r.roundNum + numRounds, matches: returnMatches });
+                    });
+                    schedule = schedule.concat(returnSchedule);
+                }
+
+                lastGeneratedSchedule[league] = schedule;
+            });
+
+            renderGeneratedSchedule();
+        }
+
+        function getKmDistance(loc1, loc2) {
+            if (!loc1 || !loc2 || loc1 === loc2) return 0;
+            const l1 = loc1.toUpperCase();
+            const l2 = loc2.toUpperCase();
+            if (defaultKmMap[l1] && defaultKmMap[l1][l2] !== undefined) return defaultKmMap[l1][l2];
+            if (defaultKmMap[l2] && defaultKmMap[l2][l1] !== undefined) return defaultKmMap[l2][l1];
+            return 15; // Valore di fallback
+        }
+
+        function calculateTeamKm(league, teamName) {
+            let totalKm = 0;
+            const leagueSchedule = lastGeneratedSchedule[league];
+            if (!leagueSchedule) return 0;
+
+            leagueSchedule.forEach(r => {
+                r.matches.forEach(m => {
+                    if (m.away.name === teamName) {
+                        totalKm += getKmDistance(m.away.location, m.home.location);
+                    }
+                });
+            });
+            return totalKm;
+        }
+
+        function recalculateKmAndInvert(league) {
+            const schedule = lastGeneratedSchedule[league];
+            if (!schedule) return;
+
+            const maxHome = leaguesMaxConsecutiveHome[league] || 2;
+            
+            // Inversione selettiva per bilanciare le trasferte
+            schedule.forEach(r => {
+                r.matches.forEach(m => {
+                    const kmAway = calculateTeamKm(league, m.away.name);
+                    const kmHome = calculateTeamKm(league, m.home.name);
+                    if (kmAway > kmHome + 30) {
+                        let temp = m.home;
+                        m.home = m.away;
+                        m.away = temp;
+                    }
                 });
             });
 
-            const currentRules = [];
-            document.querySelectorAll('.rule-item').forEach(row => {
-                currentRules.push({
-                    league: row.querySelector('.rule-league').value.trim(),
-                    field: row.querySelector('.rule-field').value.trim().toUpperCase(),
-                    date: row.querySelector('.rule-date').value.trim(),
-                    team: row.querySelector('.rule-team').value.trim(),
-                    ruleType: row.querySelector('.rule-type').value,
-                    matchTarget: row.querySelector('.rule-target').value.trim()
-                });
-            });
+            renderGeneratedSchedule();
+        }
 
-            return { 
-                leagues, 
-                leaguesMode, 
+        function renderGeneratedSchedule() {
+            const outputContainer = document.getElementById('scheduleOutputContainer');
+            const output = document.getElementById('scheduleOutput');
+            output.innerHTML = '';
+            outputContainer.classList.remove('hidden');
+
+            Object.keys(lastGeneratedSchedule).forEach(league => {
+                const schedule = lastGeneratedSchedule[league];
+                const leagueTeams = teams.filter(t => t.leagues.includes(league));
+
+                let leagueBlock = document.createElement('div');
+                leagueBlock.className = "bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4";
+
+                let kmTableHtml = `
+                    <div class="mt-4 bg-slate-950 p-4 rounded-lg border border-slate-800">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                                📊 Monitoraggio Percorrenze KM - ${league}
+                                <button onclick="toggleKmInfoModal()" class="text-brand-orange hover:text-amber-400 font-bold">❓</button>
+                            </h4>
+                            <button onclick="recalculateKmAndInvert('${league}')" class="bg-blue-800 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1.5 rounded transition">
+                                ⚖️ Ricalibra Alternanze & KM
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                `;
+
+                leagueTeams.forEach(t => {
+                    const km = calculateTeamKm(league, t.name);
+                    kmTableHtml += `
+                        <div class="bg-slate-900 p-2 rounded border border-slate-800 text-center">
+                            <div class="text-[10px] text-slate-400 font-semibold truncate">${t.name}</div>
+                            <div class="text-sm font-extrabold text-brand-orange">${km} <span class="text-[10px] font-normal text-slate-400">km</span></div>
+                        </div>
+                    `;
+                });
+                kmTableHtml += `</div></div>`;
+
+                let roundsHtml = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
+
+                schedule.forEach(r => {
+                    const roundDates = globalRoundsList.find(gr => gr.round === r.roundNum) || { dal: '', al: '' };
+
+                    roundsHtml += `
+                        <div class="bg-slate-950 border border-slate-800 rounded-lg p-3 space-y-2">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-1.5">
+                                <span class="text-xs font-extrabold text-brand-orange">${r.roundNum}ª GIORNATA</span>
+                                <span class="text-[10px] text-slate-400 font-medium">${roundDates.dal} / ${roundDates.al}</span>
+                            </div>
+                            <div class="space-y-1.5">
+                    `;
+
+                    r.matches.forEach(m => {
+                        const matchDate = calculateExactMatchDate(roundDates.dal, m.home.day);
+                        roundsHtml += `
+                            <div class="bg-slate-900/80 p-2 rounded text-[11px] flex justify-between items-center border border-slate-800/50">
+                                <div class="font-bold text-slate-200">
+                                    ${m.home.name} <span class="text-slate-500 font-normal">vs</span> ${m.away.name}
+                                </div>
+                                <div class="text-[10px] text-slate-400 text-right">
+                                    <div>${m.home.day} ${m.home.time}</div>
+                                    <div class="text-slate-500 text-[9px]">${matchDate} | ${m.home.code}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    roundsHtml += `</div></div>`;
+                });
+
+                roundsHtml += `</div>`;
+
+                leagueBlock.innerHTML = `
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                        <h3 class="text-lg font-extrabold text-white">Campionato: <span class="text-brand-orange">${league}</span></h3>
+                        <span class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded font-bold">${leaguesMode[league]}</span>
+                    </div>
+                    ${roundsHtml}
+                    ${kmTableHtml}
+                `;
+
+                output.appendChild(leagueBlock);
+            });
+        }
+
+        // --- ESPORTAZIONI & BACKUP ---
+        function exportBackup() {
+            saveScheduleDatesFromTable();
+            const backupData = {
+                leagues,
+                leaguesMode,
                 leaguesMaxConsecutiveHome,
                 globalRoundsList,
-                leagueDates: getLeagueDatesMap(), 
-                teams: currentTeams, 
-                rules: currentRules 
+                teams,
+                rules
             };
-        }
 
-        // --- BACKUP E RESTORE ---
-        function exportBackup() {
-            const data = getFormData();
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `Lega_Treviso_Backup_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
+            const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Backup_Lega_Treviso_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
         }
 
         function importBackup(event) {
-            const fileReader = new FileReader();
-            fileReader.onload = function(e) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
                 try {
                     const data = JSON.parse(e.target.result);
-                    if(data.leagues && data.teams) {
-                        leagues = data.leagues;
-                        leaguesMode = data.leaguesMode || {};
-                        leaguesMaxConsecutiveHome = data.leaguesMaxConsecutiveHome || {};
-                        globalRoundsList = data.globalRoundsList || [];
-                        teams = data.teams;
-                        rules = data.rules || [];
+                    leagues = data.leagues || [];
+                    leaguesMode = data.leaguesMode || {};
+                    leaguesMaxConsecutiveHome = data.leaguesMaxConsecutiveHome || {};
+                    globalRoundsList = data.globalRoundsList || [];
+                    teams = data.teams || [];
+                    rules = data.rules || [];
 
-                        renderLeaguesConfig();
-                        renderScheduleDatesTable();
-                        renderTeamRows();
-                        renderRulesList();
-                        alert("Backup caricato con successo!");
-                    }
-                } catch(err) {
-                    alert("Errore nel caricamento del file JSON.");
+                    renderLeaguesConfig();
+                    renderScheduleDatesTable();
+                    renderTeamRows();
+                    renderRulesList();
+                    validateGenerationState();
+                    alert("Backup caricato con successo!");
+                } catch (err) {
+                    alert("Errore nel formato del file di backup JSON.");
                 }
             };
-            fileReader.readAsText(event.target.files[0]);
-        }
-
-        function getDistance(loc1, loc2) {
-            if(!loc1 || !loc2 || loc1 === loc2) return 0;
-            const l1 = loc1.toUpperCase();
-            const l2 = loc2.toUpperCase();
-            if(defaultKmMap[l1] && defaultKmMap[l1][l2] !== undefined) return defaultKmMap[l1][l2];
-            if(defaultKmMap[l2] && defaultKmMap[l2][l1] !== undefined) return defaultKmMap[l2][l1];
-            return 15;
-        }
-
-        // --- GENERAZIONE CALENDARIO CON CONTRASTO MIGLIORATO ---
-        function generateAutomaticSchedule() {
-            const data = getFormData();
-            const scheduleOutput = document.getElementById('scheduleOutput');
-            scheduleOutput.innerHTML = '';
-            lastGeneratedSchedule = {};
-
-            data.leagues.forEach(league => {
-                const mode = data.leaguesMode[league] || "SOLO_ANDATA";
-                const maxHome = data.leaguesMaxConsecutiveHome[league] || 2;
-                const leagueTeams = data.teams.filter(t => t.leagues.includes(league));
-                if(leagueTeams.length < 2) return;
-
-                let schedule = generateRoundRobin(leagueTeams, mode, maxHome);
-                lastGeneratedSchedule[league] = schedule;
-
-                renderLeagueScheduleUI(league, schedule, data);
-            });
-
-            document.getElementById('scheduleOutputContainer').classList.remove('hidden');
-        }
-
-        function renderLeagueScheduleUI(league, schedule, data) {
-            const mode = data.leaguesMode[league] || "SOLO_ANDATA";
-            const maxHome = data.leaguesMaxConsecutiveHome[league] || 2;
-            const scheduleOutput = document.getElementById('scheduleOutput');
-            const datesInfo = data.leagueDates[league] || [];
-            
-            const teamKm = {};
-            const leagueTeams = data.teams.filter(t => t.leagues.includes(league));
-            leagueTeams.forEach(t => teamKm[t.name] = 0);
-
-            let html = `<div id="league-block-${league}" class="border border-slate-800 p-5 rounded-xl bg-slate-900 space-y-5">
-                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                    <div>
-                        <h4 class="text-lg font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
-                            <span class="w-3 h-3 rounded-full bg-brand-orange"></span> Campionato ${league}
-                        </h4>
-                        <span class="text-xs font-semibold text-brand-orange">Modalità: ${mode === 'ANDATA_RITORNO' ? 'Andata e Ritorno' : 'Solo Andata'} | Max Casa Consecutive: ${maxHome}</span>
-                    </div>
-                    ${mode === 'SOLO_ANDATA' ? `<button onclick="recalibrateKm('${league}')" class="bg-blue-800 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded transition shadow border border-blue-600">⚡ Ricalibra Alternanze & KM</button>` : ''}
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">`;
-
-            schedule.forEach((round, rIndex) => {
-                const roundNum = rIndex + 1;
-                const dateObj = datesInfo.find(d => d.round === roundNum);
-                const dateStr = dateObj ? ` (dal ${dateObj.dal} al ${dateObj.al})` : '';
-
-                // STILE GIORNATA: SFONDO GRIGIO CHIARO E TESTO AD ALTO CONTRASTO
-                html += `<div class="bg-slate-100 p-4 rounded-xl border border-slate-300 shadow-md text-slate-800">
-                    <div class="font-bold text-sm text-brand-orangeDark mb-3 border-b border-slate-200 pb-2">
-                        Giornata ${roundNum}<span class="text-slate-600 font-medium text-xs">${dateStr}</span>
-                    </div>
-                    <div class="space-y-2">`;
-
-                round.forEach(match => {
-                    if(match.home.name === "RIPOSO" || match.away.name === "RIPOSO") {
-                        const activeTeam = match.home.name === "RIPOSO" ? match.away.name : match.home.name;
-                        html += `<div class="text-slate-500 italic text-xs py-1">Riposa: <strong>${activeTeam}</strong></div>`;
-                    } else {
-                        const exactMatchDate = calculateExactMatchDate(dateObj ? dateObj.dal : null, match.home.day);
-                        
-                        const dist = getDistance(match.away.location, match.home.location);
-                        if(teamKm[match.away.name] !== undefined) teamKm[match.away.name] += dist;
-
-                        html += `<div class="flex justify-between items-center bg-white p-2 rounded border border-slate-200 shadow-sm hover:border-brand-orange/40 transition">
-                            <span class="text-xs text-slate-900 font-medium"><strong class="font-bold text-blue-950">${match.home.name}</strong> - ${match.away.name}</span>
-                            <span class="text-slate-100 text-[11px] bg-slate-900 font-mono px-2 py-0.5 rounded font-bold whitespace-nowrap ml-2">${match.home.code} | ${exactMatchDate}</span>
-                        </div>`;
-                    }
-                });
-
-                html += `</div></div>`;
-            });
-
-            html += `</div>`;
-
-            if(mode === 'SOLO_ANDATA') {
-                html += `<div class="mt-6 pt-4 border-t border-slate-800">
-                    <div class="flex items-center gap-2 mb-3">
-                        <h5 class="text-sm font-bold text-slate-200 uppercase tracking-wider">Stima Chilometri Trasferta Per Squadra</h5>
-                        <button onclick="toggleKmInfoModal()" class="text-brand-orange hover:text-amber-400 font-bold text-base transition cursor-pointer" title="Come viene calcolato?">❓</button>
-                    </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">`;
-                Object.keys(teamKm).forEach(tName => {
-                    html += `<div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 flex justify-between items-center text-xs">
-                        <span class="truncate text-slate-300 font-medium pr-1">${tName}</span>
-                        <span class="font-mono font-bold text-emerald-400 whitespace-nowrap">${teamKm[tName]} km</span>
-                    </div>`;
-                });
-                html += `</div></div>`;
-            }
-
-            html += `</div>`;
-            
-            const existingBlock = document.getElementById(`league-block-${league}`);
-            if(existingBlock) {
-                existingBlock.outerHTML = html;
-            } else {
-                scheduleOutput.innerHTML += html;
-            }
-        }
-
-        function recalibrateKm(league) {
-            const data = getFormData();
-            const maxHome = data.leaguesMaxConsecutiveHome[league] || 2;
-            let schedule = lastGeneratedSchedule[league];
-            if(!schedule) return;
-
-            schedule = enforceMaxHomeConstraint(schedule, maxHome);
-
-            lastGeneratedSchedule[league] = schedule;
-            renderLeagueScheduleUI(league, schedule, data);
-        }
-
-        function generateRoundRobin(teamsList, mode, maxHome=2) {
-            let list = [...teamsList];
-            if (list.length % 2 !== 0) list.push({ name: "RIPOSO", code: "-", day: "-", location: "-" });
-
-            const numTeams = list.length;
-            const numRounds = numTeams - 1;
-            const halfSize = numTeams / 2;
-            let schedule = [];
-            let tempTeams = [...list];
-
-            for (let round = 0; round < numRounds; round++) {
-                const roundMatches = [];
-                for (let i = 0; i < halfSize; i++) {
-                    const home = tempTeams[i];
-                    const away = tempTeams[numTeams - 1 - i];
-                    if (i === 0 && round % 2 === 1) roundMatches.push({ home: away, away: home });
-                    else roundMatches.push({ home: home, away: away });
-                }
-                schedule.push(roundMatches);
-                tempTeams.splice(1, 0, tempTeams.pop());
-            }
-
-            schedule = enforceMaxHomeConstraint(schedule, maxHome);
-
-            if(mode === "ANDATA_RITORNO") {
-                const returnSchedule = schedule.map(round => round.map(m => ({ home: m.away, away: m.home })));
-                return [...schedule, ...returnSchedule];
-            }
-
-            return schedule;
-        }
-
-        function enforceMaxHomeConstraint(schedule, maxHome) {
-            const homeStreak = {};
-
-            schedule.forEach((round, rIndex) => {
-                round.forEach((match, mIndex) => {
-                    if (match.home.name === "RIPOSO" || match.away.name === "RIPOSO") return;
-
-                    const homeName = match.home.name;
-                    const currentHomeCount = homeStreak[homeName] || 0;
-
-                    if (currentHomeCount >= maxHome) {
-                        round[mIndex] = { home: match.away, away: match.home };
-                        homeStreak[match.away.name] = (homeStreak[match.away.name] || 0) + 1;
-                        homeStreak[homeName] = 0;
-                    } else {
-                        homeStreak[homeName] = currentHomeCount + 1;
-                        homeStreak[match.away.name] = 0;
-                    }
-                });
-            });
-
-            return schedule;
+            reader.readAsText(file);
         }
 
         function exportScheduleExcel() {
-            if(Object.keys(lastGeneratedSchedule).length === 0) return;
+            if (Object.keys(lastGeneratedSchedule).length === 0) {
+                alert("Nessun calendario generato da esportare.");
+                return;
+            }
+
             const wb = XLSX.utils.book_new();
-            const data = getFormData();
 
             Object.keys(lastGeneratedSchedule).forEach(league => {
-                const rounds = lastGeneratedSchedule[league];
-                const datesInfo = data.leagueDates[league] || [];
-                const rows = [["Giornata", "Dal", "Al", "Data Match Esatta", "Casa", "Trasferta", "Sigla Campo", "Giorno Casa"]];
+                const schedule = lastGeneratedSchedule[league];
+                const exportRows = [];
 
-                rounds.forEach((round, rIndex) => {
-                    const roundNum = rIndex + 1;
-                    const dateObj = datesInfo.find(d => d.round === roundNum);
-                    round.forEach(match => {
-                        if(match.home.name !== "RIPOSO" && match.away.name !== "RIPOSO") {
-                            const exactMatchDate = calculateExactMatchDate(dateObj ? dateObj.dal : null, match.home.day);
-                            rows.push([
-                                `Giornata ${roundNum}`,
-                                dateObj ? dateObj.dal : "",
-                                dateObj ? dateObj.al : "",
-                                exactMatchDate,
-                                match.home.name,
-                                match.away.name,
-                                match.home.code,
-                                match.home.day
-                            ]);
-                        }
+                schedule.forEach(r => {
+                    const roundDates = globalRoundsList.find(gr => gr.round === r.roundNum) || { dal: '', al: '' };
+                    r.matches.forEach(m => {
+                        const matchDate = calculateExactMatchDate(roundDates.dal, m.home.day);
+                        exportRows.push({
+                            "Campionato": league,
+                            "Giornata": r.roundNum,
+                            "Data Inizio Giornata": roundDates.dal,
+                            "Data Fine Giornata": roundDates.al,
+                            "Data Presunta Gara": matchDate,
+                            "Squadra Casa": m.home.name,
+                            "Squadra Trasferta": m.away.name,
+                            "Giorno Casa": m.home.day,
+                            "Orario": m.home.time,
+                            "Codice Campo": m.home.code,
+                            "Località Casa": m.home.location,
+                            "Località Trasferta": m.away.location,
+                            "KM Trasferta": getKmDistance(m.away.location, m.home.location)
+                        });
                     });
                 });
-                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), league.substring(0, 30));
+
+                const ws = XLSX.utils.json_to_sheet(exportRows);
+                XLSX.utils.book_append_sheet(wb, ws, `Campionato ${league}`);
             });
-            XLSX.writeFile(wb, "Calendari_Completi_Lega_Treviso.xlsx");
+
+            XLSX.writeFile(wb, `Calendari_Ufficiali_Treviso_${new Date().toISOString().split('T')[0]}.xlsx`);
         }
     </script>
 </body>
