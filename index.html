@@ -169,7 +169,16 @@
                     <h2 class="text-xl font-bold text-white">Generazione Calendario Ufficiale</h2>
                     <p class="text-slate-400 text-xs" id="statusMessage">Carica un file Excel o aggiungi campionati per iniziare.</p>
                 </div>
-                <div class="flex flex-wrap gap-3">
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- INDICATORE DI CARICAMENTO -->
+                    <div id="generationSpinner" class="hidden flex items-center gap-2 text-brand-orange font-semibold text-xs animate-pulse">
+                        <svg class="animate-spin h-5 w-5 text-brand-orange" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span id="spinnerText">Elaborazione e calcolo percorsi in corso...</span>
+                    </div>
+
                     <button id="btnGenerateHTML" onclick="generateAutomaticSchedule()" disabled class="bg-brand-orange hover:bg-brand-orangeDark disabled:bg-slate-800 disabled:opacity-50 text-white font-bold text-sm px-6 py-3 rounded-lg transition shadow-lg flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed border border-amber-500/30">
                         ⚽ Genera Calendario HTML
                     </button>
@@ -180,7 +189,9 @@
             <div id="scheduleOutputContainer" class="hidden bg-slate-950 p-6 rounded-lg border border-slate-800 space-y-6">
                 <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                     <h3 class="text-xl font-bold text-brand-orange">Calendari Generati e Monitoraggio Percorrenze</h3>
-                    <button onclick="exportScheduleExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded transition">Esporta Calendari in Excel</button>
+                    <button id="btnExportExcel" onclick="exportScheduleExcel()" disabled class="bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold px-3 py-1.5 rounded transition flex items-center gap-1.5 shadow">
+                        📥 Esporta Calendari in Excel
+                    </button>
                 </div>
                 <div id="scheduleOutput" class="space-y-8"></div>
             </div>
@@ -201,11 +212,11 @@
                 <p><strong class="text-slate-800">Come vengono calcolati i km totali?</strong></p>
                 <ul class="list-disc pl-4 space-y-1">
                     <li>Vengono considerate <strong>esclusivamente le partite giocate in Trasferta</strong>. Le gare in casa non aggiungono km.</li>
-                    <li>Per ogni trasferta si individua la distanza tra il comune della squadra ospite e quello della squadra ospitante.</li>
-                    <li>I km vengono recuperati dalla tabella distanze ufficiale dei comuni di Treviso. Se una località non è presente, viene applicato un valore standard di <strong>15 km</strong>.</li>
+                    <li>Per ogni trasferta si individua la distanza tra il comune della squadra ospite e quello della squadra ospitante via API dinamica OSRM / OpenStreetMap.</li>
+                    <li>Per i derby o squadre appartenenti allo stesso comune, si applica automaticamente un valore minimo stradale urbano di <strong>5 km</strong> (mai 0 km).</li>
                 </ul>
                 <div class="bg-amber-50 border border-amber-200 p-2.5 rounded text-amber-900 font-medium text-[11px]">
-                    💡 <em>Nota:</em> Premendo il pulsante <strong>"Ricalibra Alternanze & KM"</strong>, l'algoritmo prova a scambiare casa/trasferta bilanciando i chilometri totali senza violare il vincolo del massimo di gare consecutive in casa.
+                    💡 <em>Nota:</em> Premendo il pulsante <strong>"Ricalibra Alternanze & KM"</strong>, l'algoritmo prova a scambiare casa/trasferta bilanciando i chilometri totali senza violare il vincolo del massimo di gare consecutive in casa impostato per ciascun campionato.
                 </div>
             </div>
             <button onclick="toggleKmInfoModal()" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold text-xs py-2 rounded transition">Ho Capito</button>
@@ -222,13 +233,68 @@
         let rules = [];
         let lastGeneratedSchedule = {};
 
-        const defaultKmMap = {
-            "TREVISO": { "TREVISO": 0, "MOGLIANO": 12, "PAESE": 8, "VILLORBA": 7, "CONEGLIANO": 30, "CASTELFRANCO": 28, "MONTEBELLUNA": 22 },
-            "MOGLIANO": { "TREVISO": 12, "MOGLIANO": 0, "PAESE": 18, "VILLORBA": 19, "CONEGLIANO": 42, "CASTELFRANCO": 35, "MONTEBELLUNA": 34 },
-            "PAESE": { "TREVISO": 8, "MOGLIANO": 18, "PAESE": 0, "VILLORBA": 11, "CONEGLIANO": 32, "CASTELFRANCO": 20, "MONTEBELLUNA": 18 },
-            "VILLORBA": { "TREVISO": 7, "MOGLIANO": 19, "PAESE": 11, "VILLORBA": 0, "CONEGLIANO": 23, "CASTELFRANCO": 30, "MONTEBELLUNA": 20 },
-            "CASTELFRANCO": { "TREVISO": 28, "MOGLIANO": 35, "PAESE": 20, "VILLORBA": 30, "CONEGLIANO": 50, "CASTELFRANCO": 0, "MONTEBELLUNA": 15 }
-        };
+        // Cache locale delle distanze per evitare chiamate API duplicate
+        const distanceCache = JSON.parse(localStorage.getItem('kmCache') || '{}');
+
+        /**
+         * Calcola la distanza stradale reale tra due località usando API OSRM/OpenStreetMap.
+         * Se nello stesso comune o per derby, restituisce un minimo di 5 km (mai 0 km).
+         */
+        async function calcolaKmDinamici(localitaCasa, localitaTrasferta) {
+            const loc1 = localitaCasa ? localitaCasa.toString().trim().toUpperCase() : '';
+            const loc2 = localitaTrasferta ? localitaTrasferta.toString().trim().toUpperCase() : '';
+
+            // 1. Stesso comune o dati mancanti: imposta valore minimo urbano (5 km, mai 0)
+            if (!loc1 || !loc2 || loc1 === loc2) {
+                return 5; 
+            }
+
+            const cacheKey = `${loc1}_${loc2}`;
+            const cacheKeyReverse = `${loc2}_${loc1}`;
+
+            // 2. Controllo cache in memoria locale
+            if (distanceCache[cacheKey]) return distanceCache[cacheKey];
+            if (distanceCache[cacheKeyReverse]) return distanceCache[cacheKeyReverse];
+
+            try {
+                // 3. Geocodifica Comuni tramite Nominatim
+                const getCoords = async (query) => {
+                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ', Veneto, Italy')}`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    if (data && data.length > 0) {
+                        return { lon: data[0].lon, lat: data[0].lat };
+                    }
+                    return null;
+                };
+
+                const [coord1, coord2] = await Promise.all([getCoords(loc1), getCoords(loc2)]);
+
+                if (!coord1 || !coord2) {
+                    return 15; // Fallback di riserva se il comune non viene localizzato
+                }
+
+                // 4. Calcolo percorso stradale effettivo tramite OSRM API
+                const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coord1.lon},${coord1.lat};${coord2.lon},${coord2.lat}?overview=false`;
+                const osrmRes = await fetch(osrmUrl);
+                const osrmData = await osrmRes.json();
+
+                if (osrmData.routes && osrmData.routes.length > 0) {
+                    const km = Math.round(osrmData.routes[0].distance / 1000);
+                    const finalKm = km < 3 ? 5 : km; // Garantisce un minimo urbano di 5 km
+
+                    // Salvataggio Cache
+                    distanceCache[cacheKey] = finalKm;
+                    localStorage.setItem('kmCache', JSON.stringify(distanceCache));
+
+                    return finalKm;
+                }
+            } catch (error) {
+                console.error("Errore nel recupero distanza dinamica:", error);
+            }
+
+            return 15; // Fallback di sicurezza
+        }
 
         window.onload = function() {
             renderLeaguesConfig();
@@ -695,7 +761,21 @@
         }
 
         // --- ALGORITMO DI GENERAZIONE CALENDARI ---
-        function generateAutomaticSchedule() {
+        async function generateAutomaticSchedule() {
+            const btn = document.getElementById('btnGenerateHTML');
+            const btnExport = document.getElementById('btnExportExcel');
+            const spinner = document.getElementById('generationSpinner');
+            const spinnerText = document.getElementById('spinnerText');
+
+            // Stato di caricamento UI
+            btn.disabled = true;
+            if (btnExport) btnExport.disabled = true;
+            if (spinnerText) spinnerText.textContent = "Elaborazione e calcolo percorsi in corso...";
+            spinner.classList.remove('hidden');
+
+            // Pausa asincrona minima per permettere al browser di aggiornare il DOM
+            await new Promise(resolve => setTimeout(resolve, 50));
+
             saveScheduleDatesFromTable();
             lastGeneratedSchedule = {};
 
@@ -704,10 +784,8 @@
                 if (leagueTeams.length < 2) return;
 
                 let teamList = [...leagueTeams];
-                let isOdd = false;
                 if (teamList.length % 2 !== 0) {
                     teamList.push({ name: "RIPOSO", location: "TREVISO", code: "-", day: "-", time: "-" });
-                    isOdd = true;
                 }
 
                 const numTeams = teamList.length;
@@ -753,59 +831,117 @@
                 lastGeneratedSchedule[league] = schedule;
             });
 
-            renderGeneratedSchedule();
+            await renderGeneratedSchedule();
+
+            // Ripristino stato UI
+            btn.disabled = false;
+            if (btnExport) btnExport.disabled = false;
+            spinner.classList.add('hidden');
         }
 
-        function getKmDistance(loc1, loc2) {
-            if (!loc1 || !loc2 || loc1 === loc2) return 0;
-            const l1 = loc1.toUpperCase();
-            const l2 = loc2.toUpperCase();
-            if (defaultKmMap[l1] && defaultKmMap[l1][l2] !== undefined) return defaultKmMap[l1][l2];
-            if (defaultKmMap[l2] && defaultKmMap[l2][l1] !== undefined) return defaultKmMap[l2][l1];
-            return 15;
-        }
-
-        function calculateTeamKm(league, teamName) {
-            let totalKm = 0;
+        async function calculateTeamKm(league, teamName) {
             const leagueSchedule = lastGeneratedSchedule[league];
             if (!leagueSchedule) return 0;
 
-            leagueSchedule.forEach(r => {
-                r.matches.forEach(m => {
+            const kmPromises = [];
+
+            for (const r of leagueSchedule) {
+                for (const m of r.matches) {
                     if (m.away.name === teamName) {
-                        totalKm += getKmDistance(m.away.location, m.home.location);
+                        kmPromises.push(calcolaKmDinamici(m.home.location, m.away.location));
                     }
-                });
-            });
-            return totalKm;
+                }
+            }
+
+            const results = await Promise.all(kmPromises);
+            return results.reduce((acc, curr) => acc + curr, 0);
         }
 
-        function recalculateKmAndInvert(league) {
-            const schedule = lastGeneratedSchedule[league];
-            if (!schedule) return;
+        /**
+         * Verifica se per una data squadra l'inversione genera una sequenza
+         * di partite consecutive in casa superiore al massimo consentito.
+         */
+        function isValidHomeStreak(schedule, teamName, targetRoundNum, maxHomeAllowed) {
+            let matchesSequence = [];
 
             schedule.forEach(r => {
                 r.matches.forEach(m => {
-                    const kmAway = calculateTeamKm(league, m.away.name);
-                    const kmHome = calculateTeamKm(league, m.home.name);
-                    if (kmAway > kmHome + 30) {
-                        let temp = m.home;
-                        m.home = m.away;
-                        m.away = temp;
+                    if (m.home.name === teamName) {
+                        matchesSequence.push({ round: r.roundNum, isHome: (r.roundNum === targetRoundNum) ? false : true });
+                    } else if (m.away.name === teamName) {
+                        matchesSequence.push({ round: r.roundNum, isHome: (r.roundNum === targetRoundNum) ? true : false });
                     }
                 });
             });
 
-            renderGeneratedSchedule();
+            matchesSequence.sort((a, b) => a.round - b.round);
+
+            let currentStreak = 0;
+            for (let match of matchesSequence) {
+                if (match.isHome) {
+                    currentStreak++;
+                    if (currentStreak > maxHomeAllowed) return false;
+                } else {
+                    currentStreak = 0;
+                }
+            }
+            return true;
         }
 
-        function renderGeneratedSchedule() {
+        async function recalculateKmAndInvert(league) {
+            const btn = document.getElementById('btnGenerateHTML');
+            const btnExport = document.getElementById('btnExportExcel');
+            const spinner = document.getElementById('generationSpinner');
+            const spinnerText = document.getElementById('spinnerText');
+
+            btn.disabled = true;
+            if (btnExport) btnExport.disabled = true;
+            if (spinnerText) spinnerText.textContent = "Ricalibrazione alternanze e KM in corso...";
+            spinner.classList.remove('hidden');
+
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const schedule = lastGeneratedSchedule[league];
+            const maxHome = leaguesMaxConsecutiveHome[league] || 2;
+
+            if (schedule) {
+                for (const r of schedule) {
+                    for (const m of r.matches) {
+                        const [kmAway, kmHome] = await Promise.all([
+                            calculateTeamKm(league, m.away.name),
+                            calculateTeamKm(league, m.home.name)
+                        ]);
+
+                        // Prova lo scambio solo se la squadra in trasferta sta percorrendo molti più chilometri
+                        if (kmAway > kmHome + 25) {
+                            // Verifica se l'inversione rispetta il vincolo MAX GARE IN CASA CONSECUTIVE per entrambe le squadre
+                            const validForAwayTeam = isValidHomeStreak(schedule, m.away.name, r.roundNum, maxHome);
+                            const validForHomeTeam = isValidHomeStreak(schedule, m.home.name, r.roundNum, maxHome);
+
+                            if (validForAwayTeam && validForHomeTeam) {
+                                let temp = m.home;
+                                m.home = m.away;
+                                m.away = temp;
+                            }
+                        }
+                    }
+                }
+            }
+
+            await renderGeneratedSchedule();
+
+            btn.disabled = false;
+            if (btnExport) btnExport.disabled = false;
+            spinner.classList.add('hidden');
+        }
+
+        async function renderGeneratedSchedule() {
             const outputContainer = document.getElementById('scheduleOutputContainer');
             const output = document.getElementById('scheduleOutput');
             output.innerHTML = '';
             outputContainer.classList.remove('hidden');
 
-            Object.keys(lastGeneratedSchedule).forEach(league => {
+            for (const league of Object.keys(lastGeneratedSchedule)) {
                 const schedule = lastGeneratedSchedule[league];
                 const leagueTeams = teams.filter(t => t.leagues.includes(league));
 
@@ -819,15 +955,18 @@
                                 📊 Monitoraggio Percorrenze KM - ${league}
                                 <button onclick="toggleKmInfoModal()" class="text-brand-orange hover:text-amber-400 font-bold">❓</button>
                             </h4>
-                            <button onclick="recalculateKmAndInvert('${league}')" class="bg-blue-800 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1.5 rounded transition">
-                                ⚖️ Ricalibra Alternanze & KM
+                            <button onclick="recalculateKmAndInvert('${league}')" class="bg-blue-800 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1.5 rounded transition shadow">
+                                ⚖️ Ricalibra Alternanze & KM (Max Casa: ${leaguesMaxConsecutiveHome[league] || 2})
                             </button>
                         </div>
                         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
                 `;
 
-                leagueTeams.forEach(t => {
-                    const km = calculateTeamKm(league, t.name);
+                const kmPromises = leagueTeams.map(t => calculateTeamKm(league, t.name));
+                const teamKms = await Promise.all(kmPromises);
+
+                leagueTeams.forEach((t, idx) => {
+                    const km = teamKms[idx];
                     kmTableHtml += `
                         <div class="bg-slate-900 p-2.5 rounded border border-slate-800 text-center shadow-sm">
                             <div class="text-xs text-slate-300 font-bold truncate mb-1">${t.name}</div>
@@ -881,7 +1020,7 @@
                 `;
 
                 output.appendChild(leagueBlock);
-            });
+            }
         }
 
         // --- ESPORTAZIONI & BACKUP ---
@@ -932,45 +1071,71 @@
             reader.readAsText(file);
         }
 
-        function exportScheduleExcel() {
+        /**
+         * ESPORTAZIONE EXCEL OTTIMIZZATA CON PROMISE.ALL PARALLELE
+         */
+        async function exportScheduleExcel() {
             if (Object.keys(lastGeneratedSchedule).length === 0) {
                 alert("Nessun calendario generato da esportare.");
                 return;
             }
 
-            const wb = XLSX.utils.book_new();
+            const btnExport = document.getElementById('btnExportExcel');
+            const spinner = document.getElementById('generationSpinner');
+            const spinnerText = document.getElementById('spinnerText');
 
-            Object.keys(lastGeneratedSchedule).forEach(league => {
-                const schedule = lastGeneratedSchedule[league];
-                const exportRows = [];
+            if (btnExport) btnExport.disabled = true;
+            if (spinnerText) spinnerText.textContent = "Generazione e download del file Excel in corso...";
+            spinner.classList.remove('hidden');
 
-                schedule.forEach(r => {
-                    const roundDates = globalRoundsList.find(gr => gr.round === r.roundNum) || { dal: '', al: '' };
-                    r.matches.forEach(m => {
-                        const matchDate = calculateExactMatchDate(roundDates.dal, m.home.day);
-                        exportRows.push({
-                            "Campionato": league,
-                            "Giornata": r.roundNum,
-                            "Data Inizio Giornata": roundDates.dal,
-                            "Data Fine Giornata": roundDates.al,
-                            "Data Presunta Gara": matchDate,
-                            "Squadra Casa": m.home.name,
-                            "Squadra Trasferta": m.away.name,
-                            "Giorno Casa": m.home.day,
-                            "Orario": m.home.time,
-                            "Codice Campo": m.home.code,
-                            "Località Casa": m.home.location,
-                            "Località Trasferta": m.away.location,
-                            "KM Trasferta": getKmDistance(m.away.location, m.home.location)
-                        });
-                    });
-                });
+            await new Promise(resolve => setTimeout(resolve, 50));
 
-                const ws = XLSX.utils.json_to_sheet(exportRows);
-                XLSX.utils.book_append_sheet(wb, ws, `Campionato ${league}`);
-            });
+            try {
+                const wb = XLSX.utils.book_new();
 
-            XLSX.writeFile(wb, `Calendari_Ufficiali_Treviso_${new Date().toISOString().split('T')[0]}.xlsx`);
+                for (const league of Object.keys(lastGeneratedSchedule)) {
+                    const schedule = lastGeneratedSchedule[league];
+                    const exportPromises = [];
+
+                    for (const r of schedule) {
+                        const roundDates = globalRoundsList.find(gr => gr.round === r.roundNum) || { dal: '', al: '' };
+                        for (const m of r.matches) {
+                            const matchDate = calculateExactMatchDate(roundDates.dal, m.home.day);
+
+                            // Sfrutta la cache locale e calcola in parallelo
+                            const rowPromise = calcolaKmDinamici(m.home.location, m.away.location).then(kmDistanza => ({
+                                "Campionato": league,
+                                "Giornata": r.roundNum,
+                                "Data Inizio Giornata": roundDates.dal,
+                                "Data Fine Giornata": roundDates.al,
+                                "Data Presunta Gara": matchDate,
+                                "Squadra Casa": m.home.name,
+                                "Squadra Trasferta": m.away.name,
+                                "Giorno Casa": m.home.day,
+                                "Orario": m.home.time,
+                                "Codice Campo": m.home.code,
+                                "Località Casa": m.home.location,
+                                "Località Trasferta": m.away.location,
+                                "KM Trasferta": kmDistanza
+                            }));
+
+                            exportPromises.push(rowPromise);
+                        }
+                    }
+
+                    const exportRows = await Promise.all(exportPromises);
+                    const ws = XLSX.utils.json_to_sheet(exportRows);
+                    XLSX.utils.book_append_sheet(wb, ws, `Campionato ${league}`);
+                }
+
+                XLSX.writeFile(wb, `Calendari_Ufficiali_Treviso_${new Date().toISOString().split('T')[0]}.xlsx`);
+            } catch (err) {
+                console.error("Errore durante la creazione del file Excel:", err);
+                alert("Si è verificato un errore durante l'esportazione del file.");
+            } finally {
+                if (btnExport) btnExport.disabled = false;
+                spinner.classList.add('hidden');
+            }
         }
     </script>
 </body>
